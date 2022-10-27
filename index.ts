@@ -11,6 +11,7 @@ import {
 } from "./utils/ConstantPool"
 import { betterMethodDescriptor } from "./utils/Descriptors"
 import NotImplemented from "./utils/errors/NotImplemented"
+import { executeMethod } from "./utils/Methods"
 
 const FILE_NAME = "Main.class"
 
@@ -157,10 +158,12 @@ for (let i = 0; i < methodsCount; i++) {
 		attributes,
 	})
 }
-console.log(JSON.stringify(methods, null, 1))
 // u2             attributes_count;
 const attributesCount = reader.readU2()
 const attributes = readAttributeInfo(reader, attributesCount, constantPool)
-console.log(JSON.stringify(attributes, null, 1))
 
-reader.close()
+for (const method of methods) {
+	if(method.methodName == "<init>"){
+		executeMethod(method)
+	}
+}

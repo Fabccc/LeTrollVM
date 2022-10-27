@@ -9,7 +9,7 @@ class BufferedReader {
 		this.fileSocket = fileSocket
 	}
 
-	public readu(count: number): Buffer {
+	private readu(count: number): Buffer {
 		if(this.isClosed){
 			throw new Error("Buffer is closed")
 		}
@@ -17,6 +17,15 @@ class BufferedReader {
 		readSync(this.fileSocket, buffer, 0, count, this.cursor)
 		this.cursor += count
 		return buffer
+	}
+
+	public readU1Array(count: number){
+		const buffer = this.readu(count)
+		let array = []
+		for (let i = 0; i < buffer.length; i++) {
+			array[i] = buffer[i]
+		}
+		return array
 	}
 
   public readUTF(count: number){

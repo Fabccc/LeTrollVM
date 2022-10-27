@@ -26,7 +26,7 @@ export function readAttributeInfo(
 			// u4 code_length;
 			const codeLength = reader.readU4()
 			// u1 code[code_length];
-			const code = reader.readu(codeLength)
+			const code = reader.readU1Array(codeLength)
 			// u2 exception_table_length;
 			const exceptionTableLength = reader.readU2()
 			// } exception_table[exception_table_length];
