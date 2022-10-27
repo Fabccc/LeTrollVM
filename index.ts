@@ -1,4 +1,4 @@
-import { existsSync, openSync } from "fs"
+import { closeSync, existsSync, openSync } from "fs"
 import { exit } from "process"
 import { listClassAccesors, listMethodAccesors } from "./utils/Accessors"
 import { readAttributeInfo } from "./utils/Attributes"
@@ -9,6 +9,7 @@ import {
 	readClassInfo,
 	readNameIndex,
 } from "./utils/ConstantPool"
+import { betterMethodDescriptor } from "./utils/Descriptors"
 import NotImplemented from "./utils/errors/NotImplemented"
 
 const FILE_NAME = "Main.class"
@@ -144,20 +145,22 @@ for (let i = 0; i < methodsCount; i++) {
 	// }
 	const accessFlags = reader.readU2()
 	const accessorsFlags = listMethodAccesors(accessFlags)
-	const methodName = readNameIndex(constantPool, reader.readU2()-1)
-	const descriptors = readNameIndex(constantPool, reader.readU2()-1)
+	const methodName = readNameIndex(constantPool, reader.readU2() - 1)
+	const descriptors = readNameIndex(constantPool, reader.readU2() - 1)
+	const methodSignature = betterMethodDescriptor(descriptors)
 	const attributeCount = reader.readU2()
-	console.log(accessorsFlags)
-	console.log(methodName)
-	console.log(descriptors)
-	
-	readAttributeInfo(reader, attributeCount, constantPool)
+	const attributes = readAttributeInfo(reader, attributeCount, constantPool)
+	methods.push({
+		methodName,
+		accessorsFlags,
+		methodSignature,
+		attributes,
+	})
 }
+console.log(JSON.stringify(methods, null, 1))
 // u2             attributes_count;
 const attributesCount = reader.readU2()
-console.log(`Attributes count ${attributesCount}`)
-const attributes = []
-// attribute_info attributes[attributes_count];
-for (let i = 0; i < attributesCount; i++) {
-	throw new NotImplemented("Attributes not implemetend yet")
-}
+const attributes = readAttributeInfo(reader, attributesCount, constantPool)
+console.log(JSON.stringify(attributes, null, 1))
+
+reader.close()

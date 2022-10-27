@@ -1,14 +1,18 @@
-import { readSync } from "fs"
+import { closeSync, readSync } from "fs"
 
 class BufferedReader {
 	private fileSocket: number = 0
 	private cursor: number = 0
+	private isClosed: boolean = false
 
 	constructor(fileSocket: number) {
 		this.fileSocket = fileSocket
 	}
 
-	private readu(count: number): Buffer {
+	public readu(count: number): Buffer {
+		if(this.isClosed){
+			throw new Error("Buffer is closed")
+		}
 		const buffer = Buffer.alloc(count)
 		readSync(this.fileSocket, buffer, 0, count, this.cursor)
 		this.cursor += count
@@ -28,6 +32,11 @@ class BufferedReader {
 
 	public readU4(): number {
 		return this.readu(4).readUInt32BE()
+	}
+
+	public close(){
+		closeSync(this.fileSocket)
+		this.isClosed = true
 	}
 }
 
