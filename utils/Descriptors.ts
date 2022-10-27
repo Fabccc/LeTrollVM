@@ -12,6 +12,22 @@
 
 import NotImplemented from "./errors/NotImplemented"
 
+export function betterDescriptor(desc: string): string {
+	const firstChar = desc[0]
+	if (firstChar == "I") {
+		return "int"
+	} else if (firstChar == "V") {
+		return "void"
+	} else if (firstChar == "[") {
+		return betterDescriptor(desc.substring(1)) + "[]"
+	} else if (firstChar == "L") {
+		let endClassName = desc.indexOf(";")
+		return desc.substring(1, endClassName).replaceAll("/", ".")
+	} else {
+		throw new NotImplemented(firstChar + " not implemented")
+	}
+}
+
 /**
  * Example
  * input:

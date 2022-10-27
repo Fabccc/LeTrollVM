@@ -1,3 +1,6 @@
+import NotImplemented from "./errors/NotImplemented"
+import { Fieldref, NameAndType } from "./Type"
+
 const CONSTANTS_POOL = {
 	7: "Class",
 	9: "Fieldref",
@@ -25,7 +28,43 @@ function printClassInfo(constantPool: any[]) {
 	}
 }
 
-function readNameIndex(constantPool: any[], nameIndexInfo: number) {
+function readFieldrefInfo(constantPool: any[], indexInfo: number): Fieldref {
+	const nameInfo = constantPool[indexInfo]
+	const klass = readClassInfo(constantPool, nameInfo.classIndex - 1)
+	const nameAndType = readNameAndTypeInfo(
+		constantPool,
+		nameInfo.nameAndTypeIndex - 1,
+	)
+	return {
+		klass: klass,
+		field: nameAndType.name,
+		fieldType: nameAndType.desc,
+	}
+}
+
+function readString(constantPool: any[], indexInfo: number): string {
+	const cstValue = constantPool[indexInfo]
+	const { value } = constantPool[cstValue.stringIndex - 1]
+	return value
+}
+
+function readNameAndTypeInfo(
+	constantPool: any[],
+	indexInfo: number,
+): NameAndType {
+	const nameAndTypeInfo = constantPool[indexInfo]
+	const name: string = readNameIndex(
+		constantPool,
+		nameAndTypeInfo.nameIndex - 1,
+	)
+	const desc: string = readNameIndex(
+		constantPool,
+		nameAndTypeInfo.descriptorIndex - 1,
+	)
+	return { name, desc }
+}
+
+function readNameIndex(constantPool: any[], nameIndexInfo: number): string {
 	const nameInfo = constantPool[nameIndexInfo]
 	return nameInfo.value
 }
@@ -37,4 +76,11 @@ function readClassInfo(constantPool: any[], classInfoIndex: number): string {
 	return nameInfo.value
 }
 
-export { CONSTANTS_POOL, readClassInfo, printClassInfo, readNameIndex }
+export {
+	CONSTANTS_POOL,
+	readClassInfo,
+	printClassInfo,
+	readNameIndex,
+	readFieldrefInfo,
+	readString,
+}

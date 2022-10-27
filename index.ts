@@ -162,8 +162,9 @@ for (let i = 0; i < methodsCount; i++) {
 const attributesCount = reader.readU2()
 const attributes = readAttributeInfo(reader, attributesCount, constantPool)
 
+// console.log(JSON.stringify(methods, null, 1))
 for (const method of methods) {
-	if(method.methodName == "<init>"){
-		executeMethod(method)
+	if(method.methodName == "main"){
+		executeMethod(method, constantPool)
 	}
 }

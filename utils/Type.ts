@@ -1,23 +1,15 @@
-// // 	method_info {
-// 	//     u2             access_flags;
-// 	//     u2             name_index;
-// 	//     u2             descriptor_index;
-// 	//     u2             attributes_count;
-// 	//     attribute_info attributes[attributes_count];
-// 	// }
-// 	const accessFlags = reader.readU2()
-// 	const accessorsFlags = listMethodAccesors(accessFlags)
-// 	const methodName = readNameIndex(constantPool, reader.readU2() - 1)
-// 	const descriptors = readNameIndex(constantPool, reader.readU2() - 1)
-// 	const methodSignature = betterMethodDescriptor(descriptors)
-// 	const attributeCount = reader.readU2()
-// 	const attributes = readAttributeInfo(reader, attributeCount, constantPool)
-// 	methods.push({
-// 		methodName,
-// 		accessorsFlags,
-// 		methodSignature,
-// 		attributes,
-// 	})
+
+export interface Fieldref {
+	klass: string,
+	field: string,
+	fieldType: string
+}
+
+export interface NameAndType{
+	name: string,
+	desc: string
+}
+
 export interface Method {
 	methodName: string
 	accessorsFlags: string[]
