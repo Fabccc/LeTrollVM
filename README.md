@@ -2,6 +2,11 @@
 
 Java Virtual Machine written in Typescript and executed with BunJS.
 
+## What can I do with it ? I mean you can look at it
+
+- Print string with System.out.println
+- Print byte with System.out.println
+
 # JSE 19 docs
 
 https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html
