@@ -2,6 +2,8 @@
 
 Java Virtual Machine written in Typescript and executed with BunJS.
 
+# JSE 19 docs
+https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html
 
 # Installation
 To install dependencies:
