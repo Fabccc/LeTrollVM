@@ -1,12 +1,23 @@
-
 export interface Fieldref {
-	klass: string,
-	field: string,
+	klass: string
+	field: string
 	fieldType: string
 }
 
-export interface NameAndType{
-	name: string,
+export interface MethodData {
+	argCount: number
+	argType: string
+	asString: string
+}
+
+export interface Methodref {
+	klass: string
+	methodName: string
+	methodDescriptor: string
+}
+
+export interface NameAndType {
+	name: string
 	desc: string
 }
 

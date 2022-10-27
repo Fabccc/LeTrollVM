@@ -5,7 +5,7 @@ class ConsolePrintStream extends StubClass {
 		super("java.io.PrintStream")
 	}
 
-	out(args) {
+	println(args) {
 		console.log(args)
 	}
 }

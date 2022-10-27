@@ -1,10 +1,12 @@
 import ConsolePrintStream from "../stubs/ConsolePrintStream"
 import StubClass from "../stubs/StubClass"
 import System from "../stubs/System"
+import NotImplemented from "./errors/NotImplemented"
 
 const stubClasses = [new System(), new ConsolePrintStream()]
 
-export function getFieldHandle(javaClassName: string, javaClassField: string) {
+export function getFieldHandle(klassName: string, javaClassField: string) {
+	const javaClassName = klassName.replaceAll("/", ".")
 	for (const klass of stubClasses) {
 		if (klass.javaClassName == javaClassName) {
 			if (klass[javaClassField] !== undefined) {
@@ -12,7 +14,9 @@ export function getFieldHandle(javaClassName: string, javaClassField: string) {
 			}
 		}
 	}
-	return undefined
+	throw new NotImplemented(
+		"Stub for " + javaClassName + "#" + javaClassField + " not found"
+	)
 }
 
 export function getStubClass(javaClassName: string): StubClass {

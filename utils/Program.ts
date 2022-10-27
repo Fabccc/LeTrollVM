@@ -8,13 +8,13 @@ class Program {
 
 	// Stacks
 	public stack: any[] = []
-	public stackSize: number
+	public maxStackSize: number
 
 	/**
 	 *
 	 */
 	constructor(code: CodeAttribute) {
-		this.stackSize = code.maxStacks
+		this.maxStackSize = code.maxStacks
 		this.localVariableCount = code.maxLocalVariables
 		this.instruction = code.code
 		this.endOfProgram = code.code.length
@@ -31,15 +31,19 @@ class Program {
 		return this.programCounter < this.endOfProgram
 	}
 
+	public get stackSize(): number {
+		return this.stack.length
+	}
+
 	public push(variable: any) {
-		if(this.stack.length >= this.stackSize){
+		if (this.stack.length >= this.maxStackSize) {
 			throw new Error("Stack overflow")
 		}
 		this.stack.push(variable)
 	}
 
-	public pop(): any{
-		if(this.stack.length == 0){
+	public pop(): any {
+		if (this.stack.length == 0) {
 			throw new Error("Stack empty")
 		}
 		return this.stack.pop()

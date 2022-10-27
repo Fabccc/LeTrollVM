@@ -1,5 +1,5 @@
 import NotImplemented from "./errors/NotImplemented"
-import { Fieldref, NameAndType } from "./Type"
+import { Fieldref, Methodref, NameAndType } from "./Type"
 
 const CONSTANTS_POOL = {
 	7: "Class",
@@ -25,6 +25,20 @@ function printClassInfo(constantPool: any[]) {
 	for (let index = 0; index < constantPool.length; index++) {
 		const element = constantPool[index]
 		console.log(`#${index + 1} ${JSON.stringify(element, null, 0)}`)
+	}
+}
+
+function readMethodrefInfo(constantPool: any[], indexInfo: number): Methodref {
+	const nameInfo = constantPool[indexInfo]
+	const klass = readClassInfo(constantPool, nameInfo.classIndex - 1)
+	const nameAndType = readNameAndTypeInfo(
+		constantPool,
+		nameInfo.nameAndTypeIndex - 1,
+	)
+	return {
+		klass: klass,
+		methodName: nameAndType.name,
+		methodDescriptor: nameAndType.desc,
 	}
 }
 
@@ -82,5 +96,6 @@ export {
 	printClassInfo,
 	readNameIndex,
 	readFieldrefInfo,
+	readMethodrefInfo,
 	readString,
 }
