@@ -40,7 +40,12 @@ export function executeMethod(method: Method, constantPool: any[]): any {
 		const instruction = program.readInstruction()
 		const programIndex = program.programCounter - 1
 		if(instruction == 0xb1){
+			// return :)
 			return 
+		}else if(instruction == 0x10){
+			// bipush
+			const value = program.readInstruction()
+			program.push(value)
 		}else if (instruction == 0xb2) {
 			// getstatic
 			const index1 = program.readInstruction()
