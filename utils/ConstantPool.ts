@@ -18,4 +18,18 @@ const CONSTANTS_POOL = {
 	20: "Package",
 }
 
-export { CONSTANTS_POOL }
+function printClassInfo(constantPool: any[]) {
+	for (let index = 0; index < constantPool.length; index++) {
+		const element = constantPool[index]
+		console.log(`#${index + 1} ${JSON.stringify(element, null, 0)}`)
+	}
+}
+
+function readClassInfo(constantPool: any[], classInfoIndex: number): string {
+	const classInfo = constantPool[classInfoIndex]
+	const { nameIndex } = classInfo
+	const nameInfo = constantPool[nameIndex - 1]
+	return nameInfo.value
+}
+
+export { CONSTANTS_POOL, readClassInfo, printClassInfo }
