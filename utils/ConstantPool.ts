@@ -25,6 +25,11 @@ function printClassInfo(constantPool: any[]) {
 	}
 }
 
+function readNameIndex(constantPool: any[], nameIndexInfo: number) {
+	const nameInfo = constantPool[nameIndexInfo]
+	return nameInfo.value
+}
+
 function readClassInfo(constantPool: any[], classInfoIndex: number): string {
 	const classInfo = constantPool[classInfoIndex]
 	const { nameIndex } = classInfo
@@ -32,4 +37,4 @@ function readClassInfo(constantPool: any[], classInfoIndex: number): string {
 	return nameInfo.value
 }
 
-export { CONSTANTS_POOL, readClassInfo, printClassInfo }
+export { CONSTANTS_POOL, readClassInfo, printClassInfo, readNameIndex }

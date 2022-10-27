@@ -1,11 +1,13 @@
 import { existsSync, openSync } from "fs"
 import { exit } from "process"
-import { listClassAccesors } from "./utils/Accessors"
+import { listClassAccesors, listMethodAccesors } from "./utils/Accessors"
+import { readAttributeInfo } from "./utils/Attributes"
 import BufferedReader from "./utils/BufferedReader"
 import {
 	CONSTANTS_POOL,
 	printClassInfo,
 	readClassInfo,
+	readNameIndex,
 } from "./utils/ConstantPool"
 import NotImplemented from "./utils/errors/NotImplemented"
 
@@ -105,8 +107,57 @@ const accessorsFlag = listClassAccesors(accessFlags)
 
 // u2             this_class;
 const thisClass = reader.readU2()
-console.log(`Parsed ${readClassInfo(constantPool, thisClass-1)}`)
+console.log(`Parsed ${readClassInfo(constantPool, thisClass - 1)}`)
 
 // u2             super_class;
 const thisSuperClass = reader.readU2()
-console.log(`Super class : ${readClassInfo(constantPool, thisSuperClass-1)}`)
+console.log(`Super class : ${readClassInfo(constantPool, thisSuperClass - 1)}`)
+
+// u2             interfaces_count;
+const interfacesCount = reader.readU2()
+console.log(`Interface count ${interfacesCount}`)
+const interfaces = []
+// u2             interfaces[interfaces_count];
+for (let i = 0; i < interfacesCount; i++) {
+	throw new NotImplemented("Interface not implemented yet")
+}
+// u2             fields_count;
+const fieldsCount = reader.readU2()
+console.log(`Fields count ${fieldsCount}`)
+const fields = []
+// field_info     fields[fields_count];
+for (let i = 0; i < fieldsCount; i++) {
+	throw new NotImplemented("Fields not implemetend yet")
+}
+// u2             methods_count;
+const methodsCount = reader.readU2()
+console.log(`Methods count ${methodsCount}`)
+const methods = []
+// method_info    methods[methods_count];
+for (let i = 0; i < methodsCount; i++) {
+	// 	method_info {
+	//     u2             access_flags;
+	//     u2             name_index;
+	//     u2             descriptor_index;
+	//     u2             attributes_count;
+	//     attribute_info attributes[attributes_count];
+	// }
+	const accessFlags = reader.readU2()
+	const accessorsFlags = listMethodAccesors(accessFlags)
+	const methodName = readNameIndex(constantPool, reader.readU2()-1)
+	const descriptors = readNameIndex(constantPool, reader.readU2()-1)
+	const attributeCount = reader.readU2()
+	console.log(accessorsFlags)
+	console.log(methodName)
+	console.log(descriptors)
+	
+	readAttributeInfo(reader, attributeCount, constantPool)
+}
+// u2             attributes_count;
+const attributesCount = reader.readU2()
+console.log(`Attributes count ${attributesCount}`)
+const attributes = []
+// attribute_info attributes[attributes_count];
+for (let i = 0; i < attributesCount; i++) {
+	throw new NotImplemented("Attributes not implemetend yet")
+}
