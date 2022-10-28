@@ -25,6 +25,13 @@ Java Virtual Machine written in Typescript and executed with BunJS.
     - [x] 4 bytes-value (integer, float) 
     - [x] 8 bytes-value (double, long)
     - [x] String 
+- [ ] Arithmetic
+  - [x] int
+    - [x] addition
+    - [x] substract
+    - [x] multiplication
+    - [x] division
+    - [x] modulo
 - [ ] Methods call
   - [ ] return void method call
   - [ ] return something method calls

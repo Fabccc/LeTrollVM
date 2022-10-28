@@ -142,6 +142,9 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 		} else if (instruction == 0x4) {
 			//iconst_1
 			program.push(1)
+		} else if (instruction == 0x5) {
+			//iconst_2
+			program.push(2)
 		} else if (instruction == 0x36) {
 			//istore
 			const index = program.readInstruction()
@@ -217,7 +220,37 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			const index = program.readInstruction()
 			const value = program.variables[index]
 			program.push(value)
-		} else {
+		} else if (instruction == 0x60) {
+			// iadd
+			const value1 = program.pop()
+			const value2 = program.pop()
+			const value = value1 + value2
+			program.push(value)
+		} else if(instruction == 0x64){
+			// isub
+			const value1 = program.pop()
+			const value2 = program.pop()
+			const value = value1 - value2
+			program.push(value)
+		} else if(instruction == 0x68){
+			// imul
+			const value1 = program.pop()
+			const value2 = program.pop()
+			const value = value1 * value2
+			program.push(value)
+		}else if(instruction == 0x6c){
+			// idiv
+			const value1 = program.pop()
+			const value2 = program.pop()
+			const value = value1 / value2
+			program.push(value)
+		}else if(instruction == 0x70){
+			// irem
+			const value1 = program.pop()
+			const value2 = program.pop()
+			const value = value1 % value2
+			program.push(value)
+		}else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}
