@@ -13,9 +13,9 @@ Java Virtual Machine written in Typescript and executed with BunJS.
 
 ## Roadmap
 - [ ] Printing
-  - [ ] Constants
-    - [ ] byte, short, char
-    - [ ] boolean
+  - [x] Constants
+    - [x] byte, short, char
+    - [x] boolean
     - [x] 4 bytes-value (integer, float) 
     - [x] 8 bytes-value (double, long)
     - [x] String
