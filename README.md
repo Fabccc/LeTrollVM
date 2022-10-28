@@ -12,19 +12,20 @@ Java Virtual Machine written in Typescript and executed with BunJS.
 - Print long with System.out.println
 
 ## Roadmap
+
 - [x] Printing lvl1!
   - [x] Constants
     - [x] byte, short, char
     - [x] boolean
-    - [x] 4 bytes-value (integer, float) 
+    - [x] 4 bytes-value (integer, float)
     - [x] 8 bytes-value (double, long)
     - [x] String
   - [x] Dynamic
     - [x] byte, short, char
     - [x] boolean
-    - [x] 4 bytes-value (integer, float) 
+    - [x] 4 bytes-value (integer, float)
     - [x] 8 bytes-value (double, long)
-    - [x] String 
+    - [x] String
 - [ ] Arithmetic
   - [x] int
     - [x] addition
@@ -32,11 +33,23 @@ Java Virtual Machine written in Typescript and executed with BunJS.
     - [x] multiplication
     - [x] division
     - [x] modulo
+  - [x] float
+    - [x] addition
+    - [x] substract
+    - [x] multiplication
+    - [x] division
+    - [x] modulo
+  - [ ] long
+    - [ ] addition
+    - [ ] substract
+    - [ ] multiplication
+    - [ ] division
+    - [ ] modulo
 - [ ] Methods call
   - [ ] return void method call
   - [ ] return something method calls
     - [ ] return byte, short and char
-    - [ ] return 4 constant bytes-value (integer, float) 
+    - [ ] return 4 constant bytes-value (integer, float)
     - [ ] return 8 constant bytes-value (double, long)
     - [ ] return String
   - [ ] Passing arguments
