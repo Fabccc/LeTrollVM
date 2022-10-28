@@ -2,7 +2,10 @@ class Main {
 
   public static void main(String[] args) {
     System.out.println("Hello world!");
-    System.out.println(34 + 35);
+    System.out.println((byte)(34 + 35));
+    System.out.println((short)(34 + 35));
+    System.out.println((char)'F');
+    System.out.println(true);
     System.out.println(123456789);
     System.out.println(3.14f);
     System.out.println(999999999999999999L);
