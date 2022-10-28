@@ -20,9 +20,9 @@ Java Virtual Machine written in Typescript and executed with BunJS.
     - [x] 8 bytes-value (double, long)
     - [x] String
   - [ ] Dynamic
-    - [ ] byte, short, char
-    - [ ] boolean
-    - [ ] 4 bytes-value (integer, float) 
+    - [x] byte, short, char
+    - [x] boolean
+    - [x] 4 bytes-value (integer, float) 
     - [ ] 8 bytes-value (double, long)
     - [ ] String 
 - [ ] Methods call

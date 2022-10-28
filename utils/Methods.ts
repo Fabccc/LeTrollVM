@@ -136,17 +136,65 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 					cstValue.name + " Not implemented for instruction ldc2_w AKA 0x14",
 				)
 			}
+		} else if (instruction == 0x3) {
+			// iconst_0
+			program.push(0)
 		} else if (instruction == 0x4) {
+			//iconst_1
 			program.push(1)
+		} else if (instruction == 0x36) {
+			//istore
+			const index = program.readInstruction()
+			const value = program.pop()
+			program.variables[index] = value
 		} else if (instruction == 0x3c) {
 			//istore_1
 			const intValue = program.pop()
 			program.variables[1] = intValue
+		} else if (instruction == 0x3d) {
+			//istore_2
+			const intValue = program.pop()
+			program.variables[2] = intValue
+		} else if (instruction == 0x3e) {
+			//istore_3
+			const intValue = program.pop()
+			program.variables[3] = intValue
+		} else if (instruction == 0x15) {
+			//iload
+			const index = program.readInstruction()
+			const intValue = program.variables[index]
+			program.push(intValue)
 		} else if (instruction == 0x1b) {
 			//iload_1
 			const intValue = program.variables[1]
 			program.push(intValue)
-		} else {
+		} else if (instruction == 0x1c) {
+			//iload_2
+			const intValue = program.variables[2]
+			program.push(intValue)
+		} else if (instruction == 0x1d) {
+			//iload_3
+			const intValue = program.variables[3]
+			program.push(intValue)
+		} else if (instruction == 0x11) {
+			// sipush
+			// byte1
+			// byte2
+			const byte1 = program.readInstruction()
+			const byte2 = program.readInstruction()
+			const value = (byte1 << 8) | byte2
+			program.push(value)
+		} else if(instruction == 0x17){
+			// fload
+			// index
+			const index = program.readInstruction()
+			const value = program.variables[index]
+			program.push(value)
+		}else if(instruction == 0x38){
+			// fstore
+			const index = program.readInstruction()
+			program.variables[index] = program.pop()
+		}else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}
