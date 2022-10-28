@@ -184,17 +184,40 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			const byte2 = program.readInstruction()
 			const value = (byte1 << 8) | byte2
 			program.push(value)
-		} else if(instruction == 0x17){
+		} else if (instruction == 0x17) {
 			// fload
 			// index
 			const index = program.readInstruction()
 			const value = program.variables[index]
 			program.push(value)
-		}else if(instruction == 0x38){
+		} else if (instruction == 0x38) {
 			// fstore
+			// index
 			const index = program.readInstruction()
 			program.variables[index] = program.pop()
-		}else {
+		} else if (instruction == 0x37) {
+			// lstore
+			// index
+			const index = program.readInstruction()
+			program.variables[index] = program.pop()
+		} else if (instruction == 0x16) {
+			// lload
+			// index
+			const index = program.readInstruction()
+			const value = program.variables[index]
+			program.push(value)
+		} else if (instruction == 0x39) {
+			// dstore
+			// index
+			const index = program.readInstruction()
+			program.variables[index] = program.pop()
+		} else if (instruction == 0x18) {
+			// dload
+			// index
+			const index = program.readInstruction()
+			const value = program.variables[index]
+			program.push(value)
+		} else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}

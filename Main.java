@@ -23,9 +23,11 @@ class Main {
     System.out.println(z);
     float f = 3.14f;
     System.out.println(f);
+    long l = 999999999999999999L;
+    System.out.println(l);
+    double d = 3.141592653589793D;
+    System.out.println(d);
     // int j = 5441667;
     // int k = i + j;
-
-
   }
 }
