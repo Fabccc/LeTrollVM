@@ -5,6 +5,7 @@ class Program {
 	public programCounter: number = 0
 	public readonly endOfProgram: number
 	public localVariableCount: number
+	public debug: boolean = true
 
 	// Stacks
 	public stack: any[] = []
@@ -47,6 +48,10 @@ class Program {
 			throw new Error("Stack empty")
 		}
 		return this.stack.pop()
+	}
+
+	public log(val: string) {
+		if (this.debug) console.log(val)
 	}
 }
 export default Program

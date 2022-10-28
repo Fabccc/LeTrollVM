@@ -39,10 +39,10 @@ export function getCodeAttribute(method: Method): CodeAttribute {
 
 export function executeMethod(method: Method, constantPool: ConstantPool): any {
 	console.log("Executing " + method.methodName + " | " + method.methodSignature)
+	console.log("---------- LeTroll VM -------------")
 	const codeAttribute = getCodeAttribute(method)
-	console.log(JSON.stringify(codeAttribute, null, 1))
-	console.log(JSON.stringify(betterCodeDump(codeAttribute.code), null, 1))
 	const program = new Program(codeAttribute)
+	program.debug = false
 	while (program.hasInstruction()) {
 		const instruction = program.readInstruction()
 		const programIndex = program.programCounter - 1
@@ -59,7 +59,7 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			const index2 = program.readInstruction()
 			const constantPoolIndex = (index1 << 8) | index2
 			const ref = readFieldrefInfo(constantPool, constantPoolIndex - 1)
-			console.log(
+			program.log(
 				`#${programIndex} getstatic ${ref.klass}.${
 					ref.field
 				} => ${betterDescriptor(ref.fieldType)}`,
@@ -71,15 +71,15 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			const cstValue = constantPool.at(index - 1)
 			if (cstValue.name == "String") {
 				const stringValue = readString(constantPool, index - 1)
-				console.log(`#${programIndex} ldc "${stringValue}"`)
+				program.log(`#${programIndex} ldc "${stringValue}"`)
 				program.push(stringValue)
 			} else if (cstValue.name == "Integer") {
 				const intValue = readInteger(constantPool, index - 1)
-				console.log(`#${programIndex} ldc "${intValue}"`)
+				program.log(`#${programIndex} ldc "${intValue}"`)
 				program.push(intValue)
 			} else if (cstValue.name == "Float") {
 				const floatValue = readFloat(constantPool, index - 1)
-				console.log(`#${programIndex} ldc "${floatValue}"`)
+				program.log(`#${programIndex} ldc "${floatValue}"`)
 				program.push(floatValue)
 			} else {
 				throw new NotImplemented(
@@ -95,7 +95,7 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			const methodRef = readMethodrefInfo(constantPool, constantPoolIndex - 1)
 			const descriptor = descriptorInfo(methodRef.methodDescriptor)
 
-			console.log(
+			program.log(
 				`#${programIndex} invokevirtual "${methodRef.klass}#${methodRef.methodName}${methodRef.methodDescriptor}"`,
 			)
 			// Argument count + the required instance object to execute

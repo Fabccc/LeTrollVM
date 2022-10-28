@@ -44,7 +44,6 @@ const constantPool = readConstantPool(reader)
 
 console.log(`${FILE_NAME} has a cst pool size of ${constantPool.size}`)
 
-printClassInfo(constantPool)
 console.log("---------- LeTroll VM -------------")
 
 // u2             access_flags;
