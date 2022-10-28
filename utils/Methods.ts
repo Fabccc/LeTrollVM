@@ -136,9 +136,17 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 					cstValue.name + " Not implemented for instruction ldc2_w AKA 0x14",
 				)
 			}
-		} else if (instruction == 0x4){
+		} else if (instruction == 0x4) {
 			program.push(1)
-		}else {
+		} else if (instruction == 0x3c) {
+			//istore_1
+			const intValue = program.pop()
+			program.variables[1] = intValue
+		} else if (instruction == 0x1b) {
+			//iload_1
+			const intValue = program.variables[1]
+			program.push(intValue)
+		} else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}

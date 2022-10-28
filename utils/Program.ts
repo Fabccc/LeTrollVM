@@ -11,12 +11,16 @@ class Program {
 	public stack: any[] = []
 	public maxStackSize: number
 
+	// Variables
+	public variables: any[] = []
+
 	/**
 	 *
 	 */
 	constructor(code: CodeAttribute) {
 		this.maxStackSize = code.maxStacks
 		this.localVariableCount = code.maxLocalVariables
+		this.variables = Array(this.localVariableCount)
 		this.instruction = code.code
 		this.endOfProgram = code.code.length
 	}

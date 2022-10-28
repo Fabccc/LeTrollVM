@@ -6,6 +6,9 @@ class ConsolePrintStream extends StubClass {
 		super("java.io.PrintStream")
 	}
 
+	// What I want in the future
+	// BunJS doesn't implement decorator YET :YEPP:
+	//@jvm("(Ljava/lang/String;)V")
 	public println(methodDescriptor: string, ...args) {
 		if (methodDescriptor == "(Ljava/lang/String;)V") {
 			console.log(...args)
