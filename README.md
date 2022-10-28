@@ -39,18 +39,18 @@ Java Virtual Machine written in Typescript and executed with BunJS.
     - [x] multiplication
     - [x] division
     - [x] modulo
-  - [ ] long
-    - [ ] addition
-    - [ ] substract
-    - [ ] multiplication
-    - [ ] division
-    - [ ] modulo
-  - [ ] double
-    - [ ] addition
-    - [ ] substract
-    - [ ] multiplication
-    - [ ] division
-    - [ ] modulo
+  - [x] long
+    - [x] addition
+    - [x] substract
+    - [x] multiplication
+    - [x] division
+    - [x] modulo
+  - [x] double
+    - [x] addition
+    - [x] substract
+    - [x] multiplication
+    - [x] division
+    - [x] modulo
   - [ ] string
     - [ ] concatenation
     - [ ] substring ??? (im crazy)

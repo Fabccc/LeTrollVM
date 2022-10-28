@@ -236,6 +236,7 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			const value = program.variables[1]
 			program.push(value)
 		} else if (instruction == 0x21) {
+			// lload_3
 			const value = program.variables[3]
 			program.push(value)
 		} else if (instruction == 0x39) {
@@ -243,101 +244,149 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			// index
 			const index = program.readInstruction()
 			program.variables[index] = program.pop()
-		} else if (instruction == 0x18) {
+		} else if(instruction == 0x48){
+			// dstore_1
+			const value = program.pop()
+			program.variables[1] = value
+			program.variables[2] = value
+		} else if(instruction == 0x4a){
+			// dstore_3
+			const value = program.pop()
+			program.variables[3] = value
+			program.variables[4] = value
+		}else if (instruction == 0x18) {
 			// dload
 			// index
 			const index = program.readInstruction()
 			const value = program.variables[index]
 			program.push(value)
-		} else if (instruction == 0x60) {
+		} else if(instruction == 0x27){
+			// dload_1
+			const value = program.variables[1]
+			program.push(value)
+		} else if(instruction == 0x29){
+			// dload_3
+			const value = program.variables[3]
+			program.push(value)
+		}else if (instruction == 0x60) {
 			// iadd
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 + value2
 			program.push(value)
 		} else if (instruction == 0x64) {
 			// isub
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 - value2
 			program.push(value)
 		} else if (instruction == 0x68) {
 			// imul
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 * value2
 			program.push(value)
 		} else if (instruction == 0x6c) {
 			// idiv
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 / value2
 			program.push(value)
 		} else if (instruction == 0x70) {
 			// irem
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 % value2
 			program.push(value)
 		} else if (instruction == 0x62) {
 			// fadd
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 + value2
 			program.push(value)
 		} else if (instruction == 0x66) {
 			// fsub
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 - value2
 			program.push(value)
 		} else if (instruction == 0x6a) {
 			// fmul
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 * value2
 			program.push(value)
 		} else if (instruction == 0x6e) {
 			// fdiv
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 / value2
 			program.push(value)
 		} else if (instruction == 0x72) {
 			// frem
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 % value2
 			program.push(value)
 		} else if (instruction == 0x61) {
 			// ladd
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 + value2
 			program.push(value)
 		} else if (instruction == 0x65) {
 			// lsub
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 - value2
 			program.push(value)
 		} else if (instruction == 0x69) {
 			// lmut
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 * value2
 			program.push(value)
 		} else if (instruction == 0x6d) {
 			// ldiv
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 / value2
 			program.push(value)
 		} else if(instruction == 0x71){
 			// lrem
-			const value1 = program.pop()
 			const value2 = program.pop()
+			const value1 = program.pop()
 			const value = value1 - (value1 / value2) * value2
+			program.push(value)
+		} else if(instruction == 0x63){
+			// dadd
+			const value2 = program.pop()
+			const value1 = program.pop()
+			const value = value1 + value2
+			program.push(value)
+		} else if(instruction == 0x67){
+			// dsub
+			const value2 = program.pop()
+			const value1 = program.pop()
+			const value = value1 - value2
+			program.push(value)
+		}else if(instruction == 0x6b){
+			// dmul
+			const value2 = program.pop()
+			const value1 = program.pop()
+			const value = value1 * value2
+			program.push(value)
+		}else if(instruction == 0x6f){
+			// ddiv
+			const value2 = program.pop()
+			const value1 = program.pop()
+			const value = value1 / value2
+			program.push(value)
+		}else if(instruction == 0x73){
+			// drem
+			const value2 = program.pop()
+			const value1 = program.pop()
+			const value = value1 % value2
 			program.push(value)
 		}else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
