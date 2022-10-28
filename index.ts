@@ -1,13 +1,12 @@
-import { closeSync, existsSync, openSync } from "fs"
+import { existsSync, openSync } from "fs"
 import { exit } from "process"
 import { listClassAccesors, listMethodAccesors } from "./utils/Accessors"
 import { readAttributeInfo } from "./utils/Attributes"
 import BufferedReader from "./utils/BufferedReader"
 import {
-	CONSTANTS_POOL,
-	printClassInfo,
 	readClassInfo,
-	readNameIndex,
+	readConstantPool,
+	readNameIndex
 } from "./utils/ConstantPool"
 import { betterMethodDescriptor } from "./utils/Descriptors"
 import NotImplemented from "./utils/errors/NotImplemented"
@@ -23,25 +22,6 @@ if (!exists) {
 	console.log(`File '${FILE_NAME} 'doesn't exist`)
 	exit(0)
 }
-
-/*ClassFile {
-    u4             magic;
-    u2             minor_version;
-    u2             major_version;
-    u2             constant_pool_count;
-    cp_info        constant_pool[constant_pool_count-1];
-    u2             access_flags;
-    u2             this_class;
-    u2             super_class;
-    u2             interfaces_count;
-    u2             interfaces[interfaces_count];
-    u2             fields_count;
-    field_info     fields[fields_count];
-    u2             methods_count;
-    method_info    methods[methods_count];
-    u2             attributes_count;
-    attribute_info attributes[attributes_count];
-}*/
 
 const file = openSync(FILE_NAME, "r")
 const reader: BufferedReader = new BufferedReader(file)
@@ -59,47 +39,10 @@ const minor = reader.readU2()
 const major = reader.readU2()
 console.log(`${FILE_NAME} version ${major}:${minor}`)
 
-// u2             constant_pool_count;
-const constantPool = []
-const constantPoolSize = reader.readU2()
+const { constantPool, constantPoolSize } = readConstantPool(reader)
 
 console.log(`${FILE_NAME} has a cst pool size of ${constantPoolSize}`)
 
-// cp_info        constant_pool[constant_pool_count-1];
-for (let i = 0; i < constantPoolSize - 1; i++) {
-	// ctx pool init
-	const tag = reader.readU1()
-	const name = CONSTANTS_POOL[tag]
-	if (name == "Methodref") {
-		const classIndex = reader.readU2()
-		const nameAndTypeIndex = reader.readU2()
-		constantPool.push({ name, classIndex, nameAndTypeIndex })
-	} else if (name == "Fieldref") {
-		const classIndex = reader.readU2()
-		const nameAndTypeIndex = reader.readU2()
-		constantPool.push({ name, classIndex, nameAndTypeIndex })
-	} else if (name == "InterfaceMethodref") {
-		const classIndex = reader.readU2()
-		const nameAndTypeIndex = reader.readU2()
-		constantPool.push({ name, classIndex, nameAndTypeIndex })
-	} else if (name == "String") {
-		const stringIndex = reader.readU2()
-		constantPool.push({ name, stringIndex })
-	} else if (name == "Class") {
-		const nameIndex = reader.readU2()
-		constantPool.push({ name, nameIndex })
-	} else if (name == "Utf8") {
-		const strLength = reader.readU2()
-		const value = reader.readUTF(strLength)
-		constantPool.push({ name, strLength, value })
-	} else if (name == "NameAndType") {
-		const nameIndex = reader.readU2()
-		const descriptorIndex = reader.readU2()
-		constantPool.push({ name, nameIndex, descriptorIndex })
-	} else {
-		throw new NotImplemented(`${name} [${tag}] read is not implemetend yet`)
-	}
-}
 // printClassInfo(constantPool)
 console.log("---------- LeTroll VM -------------")
 
@@ -164,7 +107,7 @@ const attributes = readAttributeInfo(reader, attributesCount, constantPool)
 
 // console.log(JSON.stringify(methods, null, 1))
 for (const method of methods) {
-	if(method.methodName == "main"){
+	if (method.methodName == "main") {
 		executeMethod(method, constantPool)
 	}
 }

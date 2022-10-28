@@ -1,4 +1,10 @@
-import { readFieldrefInfo, readMethodrefInfo, readString } from "./ConstantPool"
+import {
+	readFieldrefInfo,
+	readFloat,
+	readInteger,
+	readMethodrefInfo,
+	readString,
+} from "./ConstantPool"
 import {
 	betterDescriptor,
 	betterMethodDescriptor,
@@ -39,14 +45,14 @@ export function executeMethod(method: Method, constantPool: any[]): any {
 	while (program.hasInstruction()) {
 		const instruction = program.readInstruction()
 		const programIndex = program.programCounter - 1
-		if(instruction == 0xb1){
+		if (instruction == 0xb1) {
 			// return :)
-			return 
-		}else if(instruction == 0x10){
+			return
+		} else if (instruction == 0x10) {
 			// bipush
 			const value = program.readInstruction()
 			program.push(value)
-		}else if (instruction == 0xb2) {
+		} else if (instruction == 0xb2) {
 			// getstatic
 			const index1 = program.readInstruction()
 			const index2 = program.readInstruction()
@@ -66,7 +72,15 @@ export function executeMethod(method: Method, constantPool: any[]): any {
 				const stringValue = readString(constantPool, index - 1)
 				console.log(`#${programIndex} ldc "${stringValue}"`)
 				program.push(stringValue)
-			} else {
+			} else if (cstValue.name == "Integer") {
+				const intValue = readInteger(constantPool, index - 1)
+				console.log(`#${programIndex} ldc "${intValue}"`)
+				program.push(intValue)
+			} else if(cstValue.name == "Float"){
+				const floatValue = readFloat(constantPool, index - 1)
+				console.log(`#${programIndex} ldc "${floatValue}"`)
+				program.push(floatValue)
+			}else {
 				throw new NotImplemented(
 					cstValue.name + " not implemented for instruction 0x12",
 				)

@@ -35,7 +35,7 @@ export function descriptorInfo(desc: string): MethodData {
 	let setArrayLevel = false
 	for (let i = 0; i < desc.length; i++) {
 		const charAt = desc[i]
-		if(charAt == "(" || charAt == ")") continue
+		if (charAt == "(" || charAt == ")") continue
 		let arg = ""
 		if (charAt == "I") {
 			arg += "int"
@@ -49,6 +49,8 @@ export function descriptorInfo(desc: string): MethodData {
 			let endClassName = findIn.indexOf(";")
 			arg += findIn.substring(1, endClassName)
 			i += endClassName
+		} else if (charAt == "F") {
+			arg += "float"
 		} else {
 			throw new NotImplemented("Descriptor for " + charAt + " not implemetend")
 		}
