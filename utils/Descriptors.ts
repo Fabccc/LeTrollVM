@@ -55,7 +55,11 @@ export function descriptorInfo(desc: string): MethodData {
 			arg += "long"
 		} else if (charAt == "D") {
 			arg += "double"
-		} else {
+		} else if (charAt == "C"){
+			arg += "char"
+		} else if(charAt == "Z"){
+			arg += "boolean"
+		}else {
 			throw new NotImplemented("Descriptor for " + charAt + " not implemetend")
 		}
 		if (setArrayLevel) {

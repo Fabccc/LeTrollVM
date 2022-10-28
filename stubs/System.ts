@@ -1,5 +1,5 @@
 import ConsolePrintStream from "./ConsolePrintStream"
-import StubClass from "./StubClass"
+import { StubClass } from "./StubClass"
 
 class System extends StubClass {
 	public out = new ConsolePrintStream()

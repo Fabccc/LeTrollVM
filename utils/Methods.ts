@@ -110,7 +110,7 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 						)
 					}
 					const methodHandle = instance[methodRef.methodName]
-					methodHandle(value)
+					methodHandle(methodRef.methodDescriptor, value)
 				} else {
 					throw new NotImplemented(
 						"invokevirtual Not implemented with " + value + " / " + fieldref,
@@ -136,7 +136,9 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 					cstValue.name + " Not implemented for instruction ldc2_w AKA 0x14",
 				)
 			}
-		} else {
+		} else if (instruction == 0x4){
+			program.push(1)
+		}else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}
