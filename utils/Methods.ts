@@ -77,11 +77,11 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 				const intValue = readInteger(constantPool, index - 1)
 				console.log(`#${programIndex} ldc "${intValue}"`)
 				program.push(intValue)
-			} else if(cstValue.name == "Float"){
+			} else if (cstValue.name == "Float") {
 				const floatValue = readFloat(constantPool, index - 1)
 				console.log(`#${programIndex} ldc "${floatValue}"`)
 				program.push(floatValue)
-			}else {
+			} else {
 				throw new NotImplemented(
 					cstValue.name + " not implemented for instruction 0x12",
 				)
@@ -119,7 +119,7 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			} else {
 				throw new Error("Wrong parameter size")
 			}
-		} else if (instruction == 0x14){
+		} else if (instruction == 0x14) {
 			// ldc2_w
 			// indexbyte1
 			const indexbyte1 = program.readInstruction() // ref to a value on the constant pool
@@ -127,12 +127,16 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			const indexbyte2 = program.readInstruction() // ref to a value on the constant pool
 			const index = (indexbyte1 << 8) | indexbyte2
 			const cstValue = constantPool.at(index - 1)
-			if(cstValue.name == "Long"){
+			if (cstValue.name == "Long") {
 				program.push(cstValue.value)
-			}else{
-				throw new NotImplemented(cstValue.name+" Not implemented for instruction ldc2_w AKA 0x14")
+			} else if (cstValue.name == "Double") {
+				program.push(cstValue.value)
+			} else {
+				throw new NotImplemented(
+					cstValue.name + " Not implemented for instruction ldc2_w AKA 0x14",
+				)
 			}
-		}else {
+		} else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}

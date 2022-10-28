@@ -53,6 +53,8 @@ export function descriptorInfo(desc: string): MethodData {
 			arg += "float"
 		} else if (charAt == "J") {
 			arg += "long"
+		} else if (charAt == "D") {
+			arg += "double"
 		} else {
 			throw new NotImplemented("Descriptor for " + charAt + " not implemetend")
 		}

@@ -183,6 +183,22 @@ function readConstantPool(reader: BufferedReader): ConstantPool {
 			constantPool.push({ name, value })
 			constantPool.addUnsuableIndex(i)
 			i++
+		} else if (name == "Double") {
+			const high_bytes = BigInt(reader.readU4())
+			const low_bytes = BigInt(reader.readU4())
+			const bits = (high_bytes << 32n) + low_bytes
+
+			const s = bits >> 63n == 0n ? 1n : -1n
+			const e = (bits >> 52n) & 0x7ffn
+			const m =
+				e == 0n
+					? (bits & 0xfffffffffffffn) << 1n
+					: (bits & 0xfffffffffffffn) | 0x10000000000000n
+
+			const value = Number(s) * Number(m) * Math.pow(2,Number(e)-1075)
+			constantPool.push({ name, value })
+			constantPool.addUnsuableIndex(i)
+			i++
 		} else {
 			throw new NotImplemented(`${name} [${tag}] read is not implemetend yet`)
 		}
