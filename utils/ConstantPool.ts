@@ -1,5 +1,6 @@
 import BufferedReader from "./BufferedReader"
 import NotImplemented from "./errors/NotImplemented"
+import { stringify } from "./Print"
 import { Fieldref, Methodref, NameAndType } from "./Type"
 
 const CONSTANTS_POOL = {
@@ -22,15 +23,26 @@ const CONSTANTS_POOL = {
 	20: "Package",
 }
 
-function printClassInfo(constantPool: any[]) {
-	for (let index = 0; index < constantPool.length; index++) {
-		const element = constantPool[index]
-		console.log(`#${index + 1} ${JSON.stringify(element, null, 0)}`)
+function printClassInfo(constantPool: ConstantPool) {
+	// for (let index = 0; index < constantPool.size; index++) {
+	// 	const element = constantPool.at(index)
+	// 	console.log(`#${index + 1} ${JSON.stringify(element, null, 0)}`)
+	// }
+	let index = 1
+	for (const element of constantPool.pool) {
+		console.log(`#${index} ${stringify(element, 0)}`)
+		if (element.name == "Long" || element.name == "Double") {
+			index++
+		}
+		index++
 	}
 }
 
-function readMethodrefInfo(constantPool: any[], indexInfo: number): Methodref {
-	const nameInfo = constantPool[indexInfo]
+function readMethodrefInfo(
+	constantPool: ConstantPool,
+	indexInfo: number,
+): Methodref {
+	const nameInfo = constantPool.at(indexInfo)
 	const klass = readClassInfo(constantPool, nameInfo.classIndex - 1)
 	const nameAndType = readNameAndTypeInfo(
 		constantPool,
@@ -43,8 +55,11 @@ function readMethodrefInfo(constantPool: any[], indexInfo: number): Methodref {
 	}
 }
 
-function readFieldrefInfo(constantPool: any[], indexInfo: number): Fieldref {
-	const nameInfo = constantPool[indexInfo]
+function readFieldrefInfo(
+	constantPool: ConstantPool,
+	indexInfo: number,
+): Fieldref {
+	const nameInfo = constantPool.at(indexInfo)
 	const klass = readClassInfo(constantPool, nameInfo.classIndex - 1)
 	const nameAndType = readNameAndTypeInfo(
 		constantPool,
@@ -57,27 +72,27 @@ function readFieldrefInfo(constantPool: any[], indexInfo: number): Fieldref {
 	}
 }
 
-function readInteger(constantPool: any[], indexInfo: number): number {
-	const { value } = constantPool[indexInfo]
+function readInteger(constantPool: ConstantPool, indexInfo: number): number {
+	const { value } = constantPool.at(indexInfo)
 	return value
 }
 
-function readFloat(constantPool: any[], indexInfo: number): number {
-	const { value } = constantPool[indexInfo]
+function readFloat(constantPool: ConstantPool, indexInfo: number): number {
+	const { value } = constantPool.at(indexInfo)
 	return value
 }
 
-function readString(constantPool: any[], indexInfo: number): string {
-	const cstValue = constantPool[indexInfo]
-	const { value } = constantPool[cstValue.stringIndex - 1]
+function readString(constantPool: ConstantPool, indexInfo: number): string {
+	const cstValue = constantPool.at(indexInfo)
+	const { value } = constantPool.at(cstValue.stringIndex - 1)
 	return value
 }
 
 function readNameAndTypeInfo(
-	constantPool: any[],
+	constantPool: ConstantPool,
 	indexInfo: number,
 ): NameAndType {
-	const nameAndTypeInfo = constantPool[indexInfo]
+	const nameAndTypeInfo = constantPool.at(indexInfo)
 	const name: string = readNameIndex(
 		constantPool,
 		nameAndTypeInfo.nameIndex - 1,
@@ -89,27 +104,29 @@ function readNameAndTypeInfo(
 	return { name, desc }
 }
 
-function readNameIndex(constantPool: any[], nameIndexInfo: number): string {
-	const nameInfo = constantPool[nameIndexInfo]
+function readNameIndex(
+	constantPool: ConstantPool,
+	nameIndexInfo: number,
+): string {
+	const nameInfo = constantPool.at(nameIndexInfo)
 	return nameInfo.value
 }
 
-function readClassInfo(constantPool: any[], classInfoIndex: number): string {
-	const classInfo = constantPool[classInfoIndex]
+function readClassInfo(
+	constantPool: ConstantPool,
+	classInfoIndex: number,
+): string {
+	const classInfo = constantPool.at(classInfoIndex)
 	const { nameIndex } = classInfo
-	const nameInfo = constantPool[nameIndex - 1]
+	const nameInfo = constantPool.at(nameIndex - 1)
 	return nameInfo.value
 }
 
-interface ConstantPoolData {
-	constantPoolSize: number
-	constantPool: any[]
-}
-function readConstantPool(reader: BufferedReader): ConstantPoolData {
+function readConstantPool(reader: BufferedReader): ConstantPool {
 	// cp_info        constant_pool[constant_pool_count-1];
 	// u2             constant_pool_count;
-	const constantPool = []
 	const constantPoolSize = reader.readU2()
+	const constantPool = new ConstantPool([], constantPoolSize, [])
 	for (let i = 0; i < constantPoolSize - 1; i++) {
 		// ctx pool init
 		const tag = reader.readU1()
@@ -153,11 +170,65 @@ function readConstantPool(reader: BufferedReader): ConstantPoolData {
 			const value = s * m * Math.pow(2, e - 150)
 
 			constantPool.push({ name, value })
+		} else if (name == "Long") {
+			// All 8-byte constants take up two entries in the constant_pool
+			// table of the class file. If a CONSTANT_Long_info or CONSTANT_Double_info
+			// structure is the entry at index n in the constant_pool table,
+			// then the next usable entry in the table is located at index n+2.
+			// The constant_pool index n+1 must be valid but is considered unusable.
+
+			const high_bytes = BigInt(reader.readU4())
+			const low_bytes = BigInt(reader.readU4())
+			const value = (high_bytes << 32n) + low_bytes
+			constantPool.push({ name, value })
+			constantPool.addUnsuableIndex(i)
+			i++
 		} else {
 			throw new NotImplemented(`${name} [${tag}] read is not implemetend yet`)
 		}
 	}
-	return { constantPoolSize, constantPool }
+	return constantPool
+}
+export class ConstantPool {
+	private constantPool: any[]
+	private constantPoolSize: number
+	private unusableIndeces: number[]
+
+	constructor(
+		constantPool: any[],
+		constantPoolSize: number,
+		unusableIndeces: number[],
+	) {
+		this.constantPool = constantPool
+		this.constantPoolSize = constantPoolSize
+		this.unusableIndeces = unusableIndeces
+	}
+
+	push(value: any) {
+		return this.constantPool.push(value)
+	}
+
+	at(index: number) {
+		return this.constantPool[index - this.unusableCount(index)]
+	}
+
+	unusableCount(index: number) {
+		let count = 0
+		for (const unsuable of this.unusableIndeces) if (index > unsuable) count++
+		return count
+	}
+
+	addUnsuableIndex(index: number) {
+		this.unusableIndeces.push(index)
+	}
+
+	get pool() {
+		return this.constantPool
+	}
+
+	get size() {
+		return this.constantPoolSize - this.unusableIndeces.length - 1
+	}
 }
 
 export {

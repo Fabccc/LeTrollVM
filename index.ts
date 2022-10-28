@@ -4,6 +4,7 @@ import { listClassAccesors, listMethodAccesors } from "./utils/Accessors"
 import { readAttributeInfo } from "./utils/Attributes"
 import BufferedReader from "./utils/BufferedReader"
 import {
+	printClassInfo,
 	readClassInfo,
 	readConstantPool,
 	readNameIndex
@@ -39,11 +40,11 @@ const minor = reader.readU2()
 const major = reader.readU2()
 console.log(`${FILE_NAME} version ${major}:${minor}`)
 
-const { constantPool, constantPoolSize } = readConstantPool(reader)
+const constantPool = readConstantPool(reader)
 
-console.log(`${FILE_NAME} has a cst pool size of ${constantPoolSize}`)
+console.log(`${FILE_NAME} has a cst pool size of ${constantPool.size}`)
 
-// printClassInfo(constantPool)
+printClassInfo(constantPool)
 console.log("---------- LeTroll VM -------------")
 
 // u2             access_flags;

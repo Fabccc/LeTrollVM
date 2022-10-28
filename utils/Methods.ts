@@ -1,4 +1,5 @@
 import {
+	ConstantPool,
 	readFieldrefInfo,
 	readFloat,
 	readInteger,
@@ -36,7 +37,7 @@ export function getCodeAttribute(method: Method): CodeAttribute {
 	return undefined
 }
 
-export function executeMethod(method: Method, constantPool: any[]): any {
+export function executeMethod(method: Method, constantPool: ConstantPool): any {
 	console.log("Executing " + method.methodName + " | " + method.methodSignature)
 	const codeAttribute = getCodeAttribute(method)
 	console.log(JSON.stringify(codeAttribute, null, 1))
@@ -67,7 +68,7 @@ export function executeMethod(method: Method, constantPool: any[]): any {
 		} else if (instruction == 0x12) {
 			// ldc
 			const index = program.readInstruction() // ref to a value on the constant pool
-			const cstValue = constantPool[index - 1]
+			const cstValue = constantPool.at(index - 1)
 			if (cstValue.name == "String") {
 				const stringValue = readString(constantPool, index - 1)
 				console.log(`#${programIndex} ldc "${stringValue}"`)
@@ -118,7 +119,20 @@ export function executeMethod(method: Method, constantPool: any[]): any {
 			} else {
 				throw new Error("Wrong parameter size")
 			}
-		} else {
+		} else if (instruction == 0x14){
+			// ldc2_w
+			// indexbyte1
+			const indexbyte1 = program.readInstruction() // ref to a value on the constant pool
+			// indexbyte2
+			const indexbyte2 = program.readInstruction() // ref to a value on the constant pool
+			const index = (indexbyte1 << 8) | indexbyte2
+			const cstValue = constantPool.at(index - 1)
+			if(cstValue.name == "Long"){
+				program.push(cstValue.value)
+			}else{
+				throw new NotImplemented(cstValue.name+" Not implemented for instruction ldc2_w AKA 0x14")
+			}
+		}else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}

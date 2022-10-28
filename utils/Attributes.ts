@@ -1,11 +1,11 @@
 import BufferedReader from "./BufferedReader"
-import { readNameIndex } from "./ConstantPool"
+import { ConstantPool, readNameIndex } from "./ConstantPool"
 import NotImplemented from "./errors/NotImplemented"
 
 export function readAttributeInfo(
 	reader: BufferedReader,
 	attributeCount: number,
-	constantPool: any[],
+	constantPool: ConstantPool,
 ): any[] {
 	const attributes = []
 	// attribute_info attributes[attributes_count];

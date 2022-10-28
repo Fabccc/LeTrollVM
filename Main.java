@@ -5,5 +5,6 @@ class Main {
     System.out.println(34 + 35);
     System.out.println(123456789);
     System.out.println(3.14f);
+    System.out.println(999999999999999999L);
   }
 }
