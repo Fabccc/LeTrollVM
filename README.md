@@ -45,6 +45,15 @@ Java Virtual Machine written in Typescript and executed with BunJS.
     - [ ] multiplication
     - [ ] division
     - [ ] modulo
+  - [ ] double
+    - [ ] addition
+    - [ ] substract
+    - [ ] multiplication
+    - [ ] division
+    - [ ] modulo
+  - [ ] string
+    - [ ] concatenation
+    - [ ] substring ??? (im crazy)
 - [ ] Methods call
   - [ ] return void method call
   - [ ] return something method calls
