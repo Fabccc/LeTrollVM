@@ -9,7 +9,7 @@ import {
 	printClassInfo,
 	readClassInfo,
 	readConstantPool,
-	readNameIndex
+	readNameIndex,
 } from "./utils/ConstantPool"
 import { betterMethodDescriptor } from "./utils/Descriptors"
 import NotImplemented from "./utils/errors/NotImplemented"
@@ -43,7 +43,6 @@ const major = reader.readU2()
 console.log(`${FILE_NAME} version ${major}:${minor}`)
 
 const constantPool = readConstantPool(reader)
-const klass = new Class(minor, major,[], constantPool)
 
 console.log(`${FILE_NAME} has a cst pool size of ${constantPool.size}`)
 
@@ -55,7 +54,14 @@ const accessorsFlag = listClassAccesors(accessFlags)
 
 // u2             this_class;
 const thisClass = reader.readU2()
-console.log(`Parsed ${readClassInfo(constantPool, thisClass - 1)}`)
+const klass = new Class(
+	readClassInfo(constantPool, thisClass - 1),
+	minor,
+	major,
+	[],
+	constantPool,
+)
+console.log(`Parsed ${klass.name}`)
 
 // u2             super_class;
 const thisSuperClass = reader.readU2()
@@ -107,11 +113,7 @@ for (let i = 0; i < methodsCount; i++) {
 // u2             attributes_count;
 const attributesCount = reader.readU2()
 klass.attributes = readAttributeInfo(reader, attributesCount, constantPool)
-
+klass.methods = methods
 
 // console.log(JSON.stringify(methods, null, 1))
-for (const method of methods) {
-	if (method.methodName == "main") {
-		executeMethod(method, klass)
-	}
-}
+klass.executeMethod("main")

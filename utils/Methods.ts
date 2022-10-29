@@ -17,7 +17,7 @@ import NotImplemented from "./errors/NotImplemented"
 import { stringify } from "./Print"
 import Program from "./Program"
 import { getFieldHandle, getMethodHandle } from "./Stubs"
-import { Attribute, CodeAttribute, Fieldref, Method } from "./Type"
+import { Arguments, Attribute, CodeAttribute, Fieldref, Method } from "./Type"
 
 export function hex(instruction: number) {
 	return "0x" + instruction.toString(16)
@@ -40,13 +40,30 @@ export function getCodeAttribute(method: Method): CodeAttribute {
 	return undefined
 }
 
-export function executeMethod(method: Method, klass: Class): any {
+export function executeMethod(
+	method: Method,
+	klass: Class,
+	...arg: Arguments[]
+): any {
 	console.log("Executing " + method.methodName + " | " + method.methodSignature)
 	console.log("---------- LeTroll VM -------------")
 	const { constantPool, attributes } = klass
 	const codeAttribute = getCodeAttribute(method)
 	const program = new Program(codeAttribute)
 	program.debug = false
+
+	// init local variables
+	for (let i = 0; i < arg.length; i++) {
+		const { type, value } = arg[i]
+		if (type == "int") {
+			program.variables[i] = value
+		} else {
+			throw new NotImplemented(
+				`Argument ${type} transfert into local variable not implemented`,
+			)
+		}
+	}
+
 	while (program.hasInstruction()) {
 		const instruction = program.readInstruction()
 		const programIndex = program.programCounter - 1
@@ -152,6 +169,9 @@ export function executeMethod(method: Method, klass: Class): any {
 		} else if (instruction == 0x5) {
 			//iconst_2
 			program.push(2)
+		} else if (instruction == 0x8) {
+			//iconst_5
+			program.push(5)
 		} else if (instruction == 0x36) {
 			//istore
 			const index = program.readInstruction()
@@ -173,6 +193,10 @@ export function executeMethod(method: Method, klass: Class): any {
 			//iload
 			const index = program.readInstruction()
 			const intValue = program.variables[index]
+			program.push(intValue)
+		} else if (instruction == 0x1a) {
+			//iload_0
+			const intValue = program.variables[0]
 			program.push(intValue)
 		} else if (instruction == 0x1b) {
 			//iload_1
@@ -451,27 +475,64 @@ export function executeMethod(method: Method, klass: Class): any {
 				const value = dynamicMethod(...dynamicArgs.reverse())
 				program.push(value)
 			}
-		} else if(instruction == 0x3a){
+		} else if (instruction == 0x3a) {
 			// astore
 			const index = program.readInstruction()
 			program.variables[index] = program.pop()
-		}else if (instruction == 0x4e) {
+		} else if (instruction == 0x4e) {
 			// astore_3
 			const value = program.pop()
 			program.variables[3] = value
-		} else if(instruction == 0x19){
+		} else if (instruction == 0x19) {
 			// aload
 			const index = program.readInstruction()
 			const value = program.variables[index]
 			program.push(value)
-		}else if (instruction == 0x2d) {
+		} else if (instruction == 0x2d) {
 			// aload_3
 			const value = program.variables[3]
 			program.push(value)
-		}else if(instruction == 0x1){
+		} else if (instruction == 0x1) {
 			// aconst_null
 			program.push(null)
-		}else {
+		} else if (instruction == 0xb8) {
+			// invokestatic
+			// indexbyte1
+			const indexbyte1 = program.readInstruction() // ref to a value on the constant pool
+			// indexbyte2
+			const indexbyte2 = program.readInstruction() // ref to a value on the constant pool
+			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
+			const methodRef = readMethodrefInfo(constantPool, constantPoolIndex - 1)
+			const methodDesc = descriptorInfo(methodRef.methodDescriptor)
+			if (methodRef.klass == klass.name) {
+				if (program.stackSize >= methodDesc.argCount) {
+					let args: Arguments[] = []
+					for (let i = 0; i < methodDesc.argCount; i++) {
+						const { type } = methodDesc.argType[i]
+						args.push({
+							type: type,
+							value: program.pop(),
+						})
+					}
+					const result = klass.executeMethod(
+						methodRef.methodName,
+						...args.reverse(),
+					)
+					program.push(result)
+				} else {
+					throw new NotImplemented(
+						`Invalid stack size (stacksize=${program.stackSize}, methodArgCount=${methodDesc.argCount})`,
+					)
+				}
+			} else {
+				throw new NotImplemented(
+					hex(instruction) + " doesn't implement multiclass loading",
+				)
+			}
+		} else if (instruction == 0xac) {
+			// ireturn
+			return program.pop()
+		} else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}

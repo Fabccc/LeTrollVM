@@ -107,3 +107,8 @@ export interface MethodHandle{
 	referenceKind: number,
 	referenceKindName: string
 }
+
+export interface Arguments{
+	value: any
+	type: string
+}
