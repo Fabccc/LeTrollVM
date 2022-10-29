@@ -1,8 +1,10 @@
+import Class from "./Class"
 import {
 	ConstantPool,
 	readFieldrefInfo,
 	readFloat,
 	readInteger,
+	readInvokeDynamic,
 	readMethodrefInfo,
 	readString,
 } from "./ConstantPool"
@@ -12,8 +14,9 @@ import {
 	descriptorInfo,
 } from "./Descriptors"
 import NotImplemented from "./errors/NotImplemented"
+import { stringify } from "./Print"
 import Program from "./Program"
-import { getFieldHandle } from "./Stubs"
+import { getFieldHandle, getMethodHandle } from "./Stubs"
 import { Attribute, CodeAttribute, Fieldref, Method } from "./Type"
 
 export function hex(instruction: number) {
@@ -37,9 +40,10 @@ export function getCodeAttribute(method: Method): CodeAttribute {
 	return undefined
 }
 
-export function executeMethod(method: Method, constantPool: ConstantPool): any {
+export function executeMethod(method: Method, klass: Class): any {
 	console.log("Executing " + method.methodName + " | " + method.methodSignature)
 	console.log("---------- LeTroll VM -------------")
+	const { constantPool, attributes } = klass
 	const codeAttribute = getCodeAttribute(method)
 	const program = new Program(codeAttribute)
 	program.debug = false
@@ -244,31 +248,31 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			// index
 			const index = program.readInstruction()
 			program.variables[index] = program.pop()
-		} else if(instruction == 0x48){
+		} else if (instruction == 0x48) {
 			// dstore_1
 			const value = program.pop()
 			program.variables[1] = value
 			program.variables[2] = value
-		} else if(instruction == 0x4a){
+		} else if (instruction == 0x4a) {
 			// dstore_3
 			const value = program.pop()
 			program.variables[3] = value
 			program.variables[4] = value
-		}else if (instruction == 0x18) {
+		} else if (instruction == 0x18) {
 			// dload
 			// index
 			const index = program.readInstruction()
 			const value = program.variables[index]
 			program.push(value)
-		} else if(instruction == 0x27){
+		} else if (instruction == 0x27) {
 			// dload_1
 			const value = program.variables[1]
 			program.push(value)
-		} else if(instruction == 0x29){
+		} else if (instruction == 0x29) {
 			// dload_3
 			const value = program.variables[3]
 			program.push(value)
-		}else if (instruction == 0x60) {
+		} else if (instruction == 0x60) {
 			// iadd
 			const value2 = program.pop()
 			const value1 = program.pop()
@@ -352,43 +356,67 @@ export function executeMethod(method: Method, constantPool: ConstantPool): any {
 			const value1 = program.pop()
 			const value = value1 / value2
 			program.push(value)
-		} else if(instruction == 0x71){
+		} else if (instruction == 0x71) {
 			// lrem
 			const value2 = program.pop()
 			const value1 = program.pop()
 			const value = value1 - (value1 / value2) * value2
 			program.push(value)
-		} else if(instruction == 0x63){
+		} else if (instruction == 0x63) {
 			// dadd
 			const value2 = program.pop()
 			const value1 = program.pop()
 			const value = value1 + value2
 			program.push(value)
-		} else if(instruction == 0x67){
+		} else if (instruction == 0x67) {
 			// dsub
 			const value2 = program.pop()
 			const value1 = program.pop()
 			const value = value1 - value2
 			program.push(value)
-		}else if(instruction == 0x6b){
+		} else if (instruction == 0x6b) {
 			// dmul
 			const value2 = program.pop()
 			const value1 = program.pop()
 			const value = value1 * value2
 			program.push(value)
-		}else if(instruction == 0x6f){
+		} else if (instruction == 0x6f) {
 			// ddiv
 			const value2 = program.pop()
 			const value1 = program.pop()
 			const value = value1 / value2
 			program.push(value)
-		}else if(instruction == 0x73){
+		} else if (instruction == 0x73) {
 			// drem
 			const value2 = program.pop()
 			const value1 = program.pop()
 			const value = value1 % value2
 			program.push(value)
-		}else {
+		} else if (instruction == 0x4c) {
+			// astore_1
+			const objectref = program.pop()
+			program.variables[1] = objectref
+		} else if (instruction == 0x2b) {
+			// aload_1
+			const objectref = program.variables[1]
+			program.push(objectref)
+		} else if (instruction == 0xba) {
+			// invokedynamic
+			// indexbyte1
+			const indexbyte1 = program.readInstruction() // ref to a value on the constant pool
+			// indexbyte2
+			const indexbyte2 = program.readInstruction() // ref to a value on the constant pool
+			// 0
+			program.padZero()
+			// 0
+			program.padZero()
+			const index = (indexbyte1 << 8) | indexbyte2
+			const invokeDynamic = readInvokeDynamic(klass, index - 1)
+			const methodHandle = getMethodHandle(invokeDynamic.methodHandleClass,invokeDynamic.methodHandleName)
+			const value = program.pop()
+			const result = methodHandle(value, ...invokeDynamic.dynamicArgs)
+			program.push(result)
+		} else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}

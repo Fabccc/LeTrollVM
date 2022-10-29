@@ -32,6 +32,13 @@ class Program {
 		return this.instruction[this.programCounter++]
 	}
 
+	public padZero(){
+		const zero = this.readInstruction()
+		if(zero != 0){
+			throw new Error("Padding with zero failed")
+		}
+	}
+
 	public hasInstruction(): boolean {
 		return this.programCounter < this.endOfProgram
 	}

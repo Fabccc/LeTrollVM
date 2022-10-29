@@ -6,8 +6,16 @@ export interface Fieldref {
 
 export interface MethodData {
 	argCount: number
-	argType: string
+	/**
+	 * Last element of list = return type
+	 */
+	argType: MethodArgument[]
 	asString: string
+}
+
+export interface MethodArgument {
+	index: number,
+	type: string
 }
 
 export interface Methodref {
@@ -19,6 +27,16 @@ export interface Methodref {
 export interface NameAndType {
 	name: string
 	desc: string
+}
+
+export interface InvokeDynamic{
+	name: "InvokeDynamic",
+	methodHandleClass: string,
+	methodHandleDescriptor: string,
+	methodHandleName: string,
+	dynamicName: string,
+	dynamicDescriptor: string,
+	dynamicArgs: any[]
 }
 
 export interface Method {
@@ -41,6 +59,28 @@ export interface CodeAttribute extends Attribute {
 	codeAttributes: Attribute[]
 }
 
+export interface BootstrapMethodsAttribute extends Attribute{
+	name: "BootstrapMethods"
+	bootstrapMethods: BootstrapMethods[]
+}
+
+export interface BootstrapMethods extends Attribute{
+	bootstrapMethodRef: number,
+	bootstrapArguments: number[]
+}
+
+export interface InnerClassesAttribute extends Attribute {
+	name: "InnerClasses"
+	classes: InnerClasses[]
+}
+
+export interface InnerClasses {
+	innerClassInfoIndex: number
+	outerClassInfoIndex: number
+	innerNameIndex: number
+	innerClassAccessFlags: number
+}
+
 export interface LineNumberTableAttribute extends Attribute {
 	name: "LineNumberTable"
 	lineNumberTable: LineNumberTableLine[]
@@ -55,4 +95,14 @@ export interface Exception {
 	endPointerCode: number
 	handlerPointerCode: number
 	catchType: number
+}
+
+
+export interface MethodHandle{
+	name: string,
+	klass: string,
+	methodName: string,
+	methodDescriptor: string,
+	referenceKind: number,
+	referenceKindName: string
 }

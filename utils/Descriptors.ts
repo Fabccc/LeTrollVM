@@ -11,7 +11,7 @@
 // [ 	        reference 	  one array dimension
 
 import NotImplemented from "./errors/NotImplemented"
-import { MethodData } from "./Type"
+import { MethodArgument, MethodData } from "./Type"
 
 export function betterDescriptor(desc: string): string {
 	const firstChar = desc[0]
@@ -30,9 +30,10 @@ export function betterDescriptor(desc: string): string {
 }
 
 export function descriptorInfo(desc: string): MethodData {
-	let args = []
+	let args: MethodArgument[] = []
 	let arrayLevel = 0
 	let setArrayLevel = false
+	let argCount = 0
 	for (let i = 0; i < desc.length; i++) {
 		const charAt = desc[i]
 		if (charAt == "(" || charAt == ")") continue
@@ -55,11 +56,11 @@ export function descriptorInfo(desc: string): MethodData {
 			arg += "long"
 		} else if (charAt == "D") {
 			arg += "double"
-		} else if (charAt == "C"){
+		} else if (charAt == "C") {
 			arg += "char"
-		} else if(charAt == "Z"){
+		} else if (charAt == "Z") {
 			arg += "boolean"
-		}else {
+		} else {
 			throw new NotImplemented("Descriptor for " + charAt + " not implemetend")
 		}
 		if (setArrayLevel) {
@@ -71,14 +72,18 @@ export function descriptorInfo(desc: string): MethodData {
 			arrayLevel = 0
 		}
 		if (arg != "") {
-			args.push(arg)
+			args.push({
+				type: arg,
+				index: argCount,
+			})
+			argCount++
 		}
 	}
 	const returnType = args[args.length - 1]
-	let result = returnType + " ("
+	let result = returnType.type + " ("
 	for (let i = 0; i < args.length - 1; i++) {
 		const element = args[i]
-		result += element + " arg" + (i + 1) + ", "
+		result += element.type + " arg" + (i + 1) + ", "
 	}
 	if (args.length > 1) {
 		result = result.substring(0, result.length - 2)
@@ -86,7 +91,7 @@ export function descriptorInfo(desc: string): MethodData {
 	const toString = result + ")"
 	return {
 		argCount: args.length - 1,
-		argType: desc,
+		argType: args,
 		asString: toString,
 	}
 }

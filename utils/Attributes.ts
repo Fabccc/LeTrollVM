@@ -1,12 +1,13 @@
 import BufferedReader from "./BufferedReader"
 import { ConstantPool, readNameIndex } from "./ConstantPool"
 import NotImplemented from "./errors/NotImplemented"
+import { Attribute } from "./Type"
 
 export function readAttributeInfo(
 	reader: BufferedReader,
 	attributeCount: number,
 	constantPool: ConstantPool,
-): any[] {
+): Attribute[] {
 	const attributes = []
 	// attribute_info attributes[attributes_count];
 	// attribute_info {
@@ -81,12 +82,61 @@ export function readAttributeInfo(
 			const sourceFileIndex = reader.readU2()
 			const sourceName = readNameIndex(constantPool, sourceFileIndex - 1)
 			attributes.push({ name, sourceName })
+		} else if (name == "InnerClasses") {
+			// InnerClasses_attribute {
+			// 	u2 number_of_classes;
+			// 	{   u2 inner_class_info_index;
+			// 			u2 outer_class_info_index;
+			// 			u2 inner_name_index;
+			// 			u2 inner_class_access_flags;
+			// 	} classes[number_of_classes];
+			// }
+			const numberOfClasses = reader.readU2()
+			const classes = []
+			for (let i = 0; i < numberOfClasses; i++) {
+				const innerClassInfoIndex = reader.readU2()
+				const outerClassInfoIndex = reader.readU2()
+				const innerNameIndex = reader.readU2()
+				const innerClassAccessFlags = reader.readU2()
+				classes.push({
+					innerClassInfoIndex,
+					outerClassInfoIndex,
+					innerNameIndex,
+					innerClassAccessFlags,
+				})
+			}
+			attributes.push({ name, classes })
+		} else if (name == "BootstrapMethods") {
+			// 	BootstrapMethods_attribute {
+			// 		u2 num_bootstrap_methods;
+			// 		{   u2 bootstrap_method_ref;
+			// 				u2 num_bootstrap_arguments;
+			// 				u2 bootstrap_arguments[num_bootstrap_arguments];
+			// 		} bootstrap_methods[num_bootstrap_methods];
+			// }
+			const bootstrapMethodsCount = reader.readU2()
+			const bootstrapMethods = []
+			for (let i = 0; i < bootstrapMethodsCount; i++) {
+				const bootstrapMethodRef = reader.readU2()
+				const bootstrapArgumentCount = reader.readU2()
+				const bootstrapArguments = []
+				for (let j = 0; j < bootstrapArgumentCount; j++) {
+					const bootstrapArgument = reader.readU2()
+					bootstrapArguments.push(bootstrapArgument)
+				}
+				bootstrapMethods.push({ bootstrapMethodRef, bootstrapArguments })
+			}
+			attributes.push({ name, bootstrapMethods })
 		} else {
 			throw new NotImplemented("Attribute reading undefined for " + name)
 		}
-		// for (let j = 0; j < length; j++) {
-		//   throw
-		// }
 	}
 	return attributes
+}
+
+export function findAttributeByName(attribs: Attribute[], name: string): Attribute {
+	for (const attrib of attribs) {
+		if (attrib.name == name) return attrib
+	}
+	throw new NotImplemented(`Could not find attribute with name ${name}`)
 }

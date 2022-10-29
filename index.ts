@@ -3,7 +3,9 @@ import { exit } from "process"
 import { listClassAccesors, listMethodAccesors } from "./utils/Accessors"
 import { readAttributeInfo } from "./utils/Attributes"
 import BufferedReader from "./utils/BufferedReader"
+import Class from "./utils/Class"
 import {
+	ConstantPool,
 	printClassInfo,
 	readClassInfo,
 	readConstantPool,
@@ -41,6 +43,7 @@ const major = reader.readU2()
 console.log(`${FILE_NAME} version ${major}:${minor}`)
 
 const constantPool = readConstantPool(reader)
+const klass = new Class(minor, major,[], constantPool)
 
 console.log(`${FILE_NAME} has a cst pool size of ${constantPool.size}`)
 
@@ -103,11 +106,12 @@ for (let i = 0; i < methodsCount; i++) {
 }
 // u2             attributes_count;
 const attributesCount = reader.readU2()
-const attributes = readAttributeInfo(reader, attributesCount, constantPool)
+klass.attributes = readAttributeInfo(reader, attributesCount, constantPool)
+
 
 // console.log(JSON.stringify(methods, null, 1))
 for (const method of methods) {
 	if (method.methodName == "main") {
-		executeMethod(method, constantPool)
+		executeMethod(method, klass)
 	}
 }

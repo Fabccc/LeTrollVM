@@ -1,7 +1,18 @@
+import { findAttributeByName } from "./Attributes"
 import BufferedReader from "./BufferedReader"
+import Class from "./Class"
+import { descriptorInfo } from "./Descriptors"
 import NotImplemented from "./errors/NotImplemented"
 import { stringify } from "./Print"
-import { Fieldref, Methodref, NameAndType } from "./Type"
+import {
+	Attribute,
+	BootstrapMethodsAttribute,
+	Fieldref,
+	InvokeDynamic,
+	MethodHandle,
+	Methodref,
+	NameAndType,
+} from "./Type"
 
 const CONSTANTS_POOL = {
 	7: "Class",
@@ -21,6 +32,17 @@ const CONSTANTS_POOL = {
 	18: "InvokeDynamic",
 	19: "Module",
 	20: "Package",
+}
+const REF_Map = {
+	1: "REF_getField",
+	2: "REF_getStatic",
+	3: "REF_putField",
+	4: "REF_putStatic",
+	5: "REF_invokeVirtual",
+	8: "REF_newInvokeSpecial",
+	6: "REF_invokeStatic",
+	7: "REF_invokeSpecial",
+	9: "REF_invokeInterface",
 }
 
 function printClassInfo(constantPool: ConstantPool) {
@@ -86,6 +108,94 @@ function readString(constantPool: ConstantPool, indexInfo: number): string {
 	const cstValue = constantPool.at(indexInfo)
 	const { value } = constantPool.at(cstValue.stringIndex - 1)
 	return value
+}
+
+export function readMethodHandleInfo(
+	klass: Class,
+	indexInfo: number,
+): MethodHandle {
+	const { major, constantPool } = klass
+	const cstValue = constantPool.at(indexInfo)
+	if (cstValue.referenceKind == 6 || cstValue.referenceKind == 7) {
+		const { referenceIndex } = cstValue
+		if (major < 52) {
+			console.error(cstValue)
+			throw new NotImplemented(
+				"readMethodHandleInfo not implemented (referenceKind 6|7, major < 52)",
+			)
+		} else {
+			// CONSTANT_Methodref_info
+			//{ klass: "java/lang/invoke/StringConcatFactory",
+			// methodName: "makeConcatWithConstants",
+			// methodDescriptor: "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;" }
+			const methodRef = readMethodrefInfo(constantPool, referenceIndex - 1)
+			return {
+				name: "MethodHandle",
+				klass: methodRef.klass,
+				methodDescriptor: methodRef.methodDescriptor,
+				methodName: methodRef.methodName,
+				referenceKind: cstValue.referenceKind,
+				referenceKindName: cstValue.referenceKindName,
+			}
+		}
+	} else {
+		throw new NotImplemented(
+			"readMethodHandleInfo not implemented for referenceKind " +
+				stringify(cstValue),
+		)
+	}
+}
+
+export function readInvokeDynamic(
+	klass: Class,
+	indexInfo: number,
+): InvokeDynamic {
+	const { attributes, constantPool } = klass
+	const cstValue = constantPool.at(indexInfo)
+	const boostrapMethodAttributeIndex = cstValue.boostrapMethodAttributeIndex
+	const nameAndType = readNameAndTypeInfo(
+		constantPool,
+		cstValue.nameAndTypeIndex - 1,
+	)
+	const bootstrapMethods = findAttributeByName(
+		attributes,
+		"BootstrapMethods",
+	) as BootstrapMethodsAttribute
+	const bsMethod =
+		bootstrapMethods.bootstrapMethods[boostrapMethodAttributeIndex]
+	const methodHandle = readMethodHandleInfo(
+		klass,
+		bsMethod.bootstrapMethodRef - 1,
+	)
+	const argsType = descriptorInfo(nameAndType.desc).argType
+	const args = []
+	for (let i = 0; i < bsMethod.bootstrapArguments.length; i++) {
+		const cpIndexRef = bsMethod.bootstrapArguments[i]
+		const argType = argsType[i]
+		if (argType == undefined) {
+			throw new Error("logic error argtype undefined")
+		} else {
+			const type = argType.type
+			if(type == "java/lang/String"){
+				const value = readString(constantPool, cpIndexRef-1)
+				args.push(value)
+			}else{
+				throw new NotImplemented(
+					`readInvokeDynamic doesn't support argument type ${type}`,
+				)		
+			}
+		}
+	}
+	return {
+		name: "InvokeDynamic",
+		dynamicDescriptor: nameAndType.desc,
+		dynamicName: nameAndType.name,
+		dynamicArgs: args,
+		methodHandleClass: methodHandle.klass,
+		methodHandleDescriptor: methodHandle.methodDescriptor,
+		methodHandleName: methodHandle.methodName,
+		
+	}
 }
 
 function readNameAndTypeInfo(
@@ -195,12 +305,47 @@ function readConstantPool(reader: BufferedReader): ConstantPool {
 					? (bits & 0xfffffffffffffn) << 1n
 					: (bits & 0xfffffffffffffn) | 0x10000000000000n
 
-			const value = Number(s) * Number(m) * Math.pow(2,Number(e)-1075)
+			const value = Number(s) * Number(m) * Math.pow(2, Number(e) - 1075)
 			constantPool.push({ name, value })
 			constantPool.addUnsuableIndex(i)
 			i++
+		} else if (name == "InvokeDynamic") {
+			// 	CONSTANT_InvokeDynamic_info {
+			// 		u1 tag;
+			// 		u2 bootstrap_method_attr_index;
+			// 		u2 name_and_type_index;
+			// }
+			const boostrapMethodAttributeIndex = reader.readU2()
+			const nameAndTypeIndex = reader.readU2()
+			constantPool.push({
+				name,
+				boostrapMethodAttributeIndex,
+				nameAndTypeIndex,
+			})
+		} else if (name == "MethodHandle") {
+			// 	CONSTANT_MethodHandle_info {
+			// 		u1 tag;
+			// 		u1 reference_kind;
+			// 		u2 reference_index;
+			// }
+			const referenceKind = reader.readU1()
+			const referenceIndex = reader.readU2()
+			//  1 (REF_getField), 2 (REF_getStatic), 3 (REF_putField), or 4 (REF_putStatic),
+			//  5 (REF_invokeVirtual) or 8 (REF_newInvokeSpecial),
+			//  6 (REF_invokeStatic) or 7 (REF_invokeSpecial),
+			//  9 (REF_invokeInterface)
+
+			const referenceKindName = REF_Map[referenceKind]
+			constantPool.push({
+				name,
+				referenceKind,
+				referenceIndex,
+				referenceKindName,
+			})
 		} else {
-			throw new NotImplemented(`${name} [${tag}] read is not implemetend yet`)
+			throw new NotImplemented(
+				`CONSTANTPOOL: ${name} [${tag}] read is not implemetend yet`,
+			)
 		}
 	}
 	return constantPool
@@ -230,7 +375,7 @@ export class ConstantPool {
 
 	unusableCount(index: number) {
 		let count = 0
-		for (const unsuable of this.unusableIndeces) if (index > unsuable) count++
+		for (const unusable of this.unusableIndeces) if (index > unusable) count++
 		return count
 	}
 

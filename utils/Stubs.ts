@@ -1,29 +1,40 @@
 import ConsolePrintStream from "../stubs/ConsolePrintStream"
-import StubClass from "../stubs/StubClass"
+import { StringConcatFactory } from "../stubs/StringConcatFactory"
+import { StubClass } from "../stubs/StubClass"
 import System from "../stubs/System"
 import NotImplemented from "./errors/NotImplemented"
 
-const stubClasses = [new System(), new ConsolePrintStream()]
+const init = [new System(), new ConsolePrintStream(), new StringConcatFactory()]
+
+const stubClasses = {}
+for (const klass of init) {
+	stubClasses[klass.javaClassName] = klass
+}
+
+export function getMethodHandle(klassName: string, javaClassField: string): Function {
+	const javaClassName = klassName.replaceAll("/", ".")
+	const klass = getStubClass(klassName)
+	if (klass[javaClassField] !== undefined) {
+		return klass[javaClassField]
+	}
+	throw new NotImplemented(`Field of klass ${javaClassName} is not implemented`)
+}
 
 export function getFieldHandle(klassName: string, javaClassField: string) {
 	const javaClassName = klassName.replaceAll("/", ".")
-	for (const klass of stubClasses) {
-		if (klass.javaClassName == javaClassName) {
-			if (klass[javaClassField] !== undefined) {
-				return klass[javaClassField]
-			}
-		}
+	const klass = getStubClass(klassName)
+	if (klass[javaClassField] !== undefined) {
+		return klass[javaClassField]
 	}
-	throw new NotImplemented(
-		"Stub for " + javaClassName + "#" + javaClassField + " not found"
-	)
+	throw new NotImplemented(`Field of klass ${javaClassName} is not implemented`)
 }
 
-export function getStubClass(javaClassName: string): StubClass {
-	for (const klass of stubClasses) {
-		if (klass.javaClassName == javaClassName) {
-			return klass
-		}
+export function getStubClass(klassName: string): StubClass {
+	const javaClassName = klassName.replaceAll("/", ".")
+	const klass = stubClasses[javaClassName]
+	if (klass !== undefined) {
+		return klass
+	} else {
+		throw new NotImplemented(`Stub for ${klassName} not implemented`)
 	}
-	return undefined
 }
