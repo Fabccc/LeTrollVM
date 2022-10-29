@@ -176,25 +176,37 @@ export function readInvokeDynamic(
 			throw new Error("logic error argtype undefined")
 		} else {
 			const type = argType.type
-			if(type == "java/lang/String"){
-				const value = readString(constantPool, cpIndexRef-1)
+			if (type == "java/lang/String") {
+				const value = readString(constantPool, cpIndexRef - 1)
 				args.push(value)
-			}else{
+			} else {
 				throw new NotImplemented(
 					`readInvokeDynamic doesn't support argument type ${type}`,
-				)		
+				)
 			}
 		}
 	}
+	// This should contains a function that has X dynamic parameter and concat them in a certains way
+	// How is that even possible JAVA !!!!!!!!!
+
+	//  Here, we must call a function with the desired parameters 
+	// to create another function (callable) by the program
+
+	console.error(stringify(nameAndType))
+	console.error(stringify(bsMethod))
+	console.error(stringify(methodHandle))
+	throw new NotImplemented(
+		"readInvokeDynamic not implemented, missing return a function",
+	)
 	return {
 		name: "InvokeDynamic",
 		dynamicDescriptor: nameAndType.desc,
 		dynamicName: nameAndType.name,
 		dynamicArgs: args,
+		dynamicArgCount: descriptorInfo(nameAndType.desc).argCount,
 		methodHandleClass: methodHandle.klass,
 		methodHandleDescriptor: methodHandle.methodDescriptor,
 		methodHandleName: methodHandle.methodName,
-		
 	}
 }
 

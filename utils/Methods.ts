@@ -121,6 +121,9 @@ export function executeMethod(method: Method, klass: Class): any {
 					)
 				}
 			} else {
+				console.error(program.stack)
+				console.error(program.stackSize)
+				console.error(descriptor)
 				throw new Error("Wrong parameter size")
 			}
 		} else if (instruction == 0x14) {
@@ -412,11 +415,29 @@ export function executeMethod(method: Method, klass: Class): any {
 			program.padZero()
 			const index = (indexbyte1 << 8) | indexbyte2
 			const invokeDynamic = readInvokeDynamic(klass, index - 1)
-			const methodHandle = getMethodHandle(invokeDynamic.methodHandleClass,invokeDynamic.methodHandleName)
-			const value = program.pop()
-			const result = methodHandle(value, ...invokeDynamic.dynamicArgs)
+			const methodHandle = getMethodHandle(
+				invokeDynamic.methodHandleClass,
+				invokeDynamic.methodHandleName,
+			)
+
+			const finalargs = []
+			for(let i = 0; i < invokeDynamic.dynamicArgCount; i++){
+				finalargs.push(program.pop())
+			}
+			throw new NotImplemented(hex(instruction) + " not implemented")
+			console.error(stringify(invokeDynamic))
+			console.log(finalargs)
+			const result = methodHandle(...finalargs)
 			program.push(result)
-		} else {
+		} else if(instruction == 0x4e){
+			// astore_3
+			const value = program.pop()
+			program.variables[3] = value
+		} else if(instruction == 0x2d){
+			// aload_3
+			const value = program.variables[3]
+			program.push(value)
+		}else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}

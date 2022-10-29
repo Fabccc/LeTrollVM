@@ -107,13 +107,6 @@ export function readAttributeInfo(
 			}
 			attributes.push({ name, classes })
 		} else if (name == "BootstrapMethods") {
-			// 	BootstrapMethods_attribute {
-			// 		u2 num_bootstrap_methods;
-			// 		{   u2 bootstrap_method_ref;
-			// 				u2 num_bootstrap_arguments;
-			// 				u2 bootstrap_arguments[num_bootstrap_arguments];
-			// 		} bootstrap_methods[num_bootstrap_methods];
-			// }
 			const bootstrapMethodsCount = reader.readU2()
 			const bootstrapMethods = []
 			for (let i = 0; i < bootstrapMethodsCount; i++) {

@@ -37,6 +37,7 @@ export interface InvokeDynamic{
 	dynamicName: string,
 	dynamicDescriptor: string,
 	dynamicArgs: any[]
+	dynamicArgCount: number,
 }
 
 export interface Method {
