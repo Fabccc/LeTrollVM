@@ -31,13 +31,13 @@ export interface NameAndType {
 
 export interface InvokeDynamic{
 	name: "InvokeDynamic",
-	methodHandleClass: string,
-	methodHandleDescriptor: string,
-	methodHandleName: string,
+	bootstrapMethodClass: string,
+	bootstrapMethodDescriptor: string,
+	bootstrapMethodName: string,
+	bootstrapMethodArguments: any[]
 	dynamicName: string,
 	dynamicDescriptor: string,
-	dynamicArgs: any[]
-	dynamicArgCount: number,
+	dynamicParametersCount: number
 }
 
 export interface Method {

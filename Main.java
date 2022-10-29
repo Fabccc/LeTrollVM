@@ -5,5 +5,6 @@ class Main {
     int i = 69696969;
     int j = 420420;
     System.out.println(s + i + " !" + j);
+    System.out.println(s + i + " !" + j);
   }
 }

@@ -167,46 +167,41 @@ export function readInvokeDynamic(
 		klass,
 		bsMethod.bootstrapMethodRef - 1,
 	)
-	const argsType = descriptorInfo(nameAndType.desc).argType
-	const args = []
-	for (let i = 0; i < bsMethod.bootstrapArguments.length; i++) {
-		const cpIndexRef = bsMethod.bootstrapArguments[i]
-		const argType = argsType[i]
-		if (argType == undefined) {
-			throw new Error("logic error argtype undefined")
+	/*
+		Signature of a invokedynamic function
+    "type": "java/lang/invoke/MethodHandles$Lookup","index": 0
+    "type": "java/lang/String","index": 1
+    "type": "java/lang/invoke/MethodType","index": 2
+		...*/
+	const boostrapArguments = []
+	const bootstrapFullArguments = descriptorInfo(methodHandle.methodDescriptor)
+	for (let i = 3; i < bootstrapFullArguments.argCount; i++) {
+		const { type } = bootstrapFullArguments.argType[i]
+		let bootstrapIndex = i - 3
+		const constantPoolBootstrapIndex =
+			bsMethod.bootstrapArguments[bootstrapIndex]
+		if (type == "java/lang/String") {
+			boostrapArguments.push(
+				readString(constantPool, constantPoolBootstrapIndex - 1),
+			)
+		} else if (type == "java/lang/Object[]") {
+			// nothing :)
 		} else {
-			const type = argType.type
-			if (type == "java/lang/String") {
-				const value = readString(constantPool, cpIndexRef - 1)
-				args.push(value)
-			} else {
-				throw new NotImplemented(
-					`readInvokeDynamic doesn't support argument type ${type}`,
-				)
-			}
+			throw new NotImplemented(
+				`readInvokeDynamic ${type} at index ${bootstrapIndex} is not implemented yet`,
+			)
 		}
 	}
-	// This should contains a function that has X dynamic parameter and concat them in a certains way
-	// How is that even possible JAVA !!!!!!!!!
 
-	//  Here, we must call a function with the desired parameters 
-	// to create another function (callable) by the program
-
-	console.error(stringify(nameAndType))
-	console.error(stringify(bsMethod))
-	console.error(stringify(methodHandle))
-	throw new NotImplemented(
-		"readInvokeDynamic not implemented, missing return a function",
-	)
 	return {
 		name: "InvokeDynamic",
 		dynamicDescriptor: nameAndType.desc,
 		dynamicName: nameAndType.name,
-		dynamicArgs: args,
-		dynamicArgCount: descriptorInfo(nameAndType.desc).argCount,
-		methodHandleClass: methodHandle.klass,
-		methodHandleDescriptor: methodHandle.methodDescriptor,
-		methodHandleName: methodHandle.methodName,
+		dynamicParametersCount: descriptorInfo(nameAndType.desc).argCount,
+		bootstrapMethodArguments: boostrapArguments,
+		bootstrapMethodClass: methodHandle.klass,
+		bootstrapMethodDescriptor: methodHandle.methodDescriptor,
+		bootstrapMethodName: methodHandle.methodName,
 	}
 }
 

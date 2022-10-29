@@ -415,29 +415,51 @@ export function executeMethod(method: Method, klass: Class): any {
 			program.padZero()
 			const index = (indexbyte1 << 8) | indexbyte2
 			const invokeDynamic = readInvokeDynamic(klass, index - 1)
-			const methodHandle = getMethodHandle(
-				invokeDynamic.methodHandleClass,
-				invokeDynamic.methodHandleName,
-			)
-
-			const finalargs = []
-			for(let i = 0; i < invokeDynamic.dynamicArgCount; i++){
-				finalargs.push(program.pop())
+			// fast lookup
+			const lookupName =
+				invokeDynamic.dynamicName + "|" + invokeDynamic.dynamicDescriptor
+			if (program.virtualInvokes[lookupName]) {
+				const dynamicMethod = program.virtualInvokes[lookupName]
+				const dynamicArgs = []
+				for (let i = 0; i < invokeDynamic.dynamicParametersCount; i++)
+					dynamicArgs.push(program.pop())
+				const value = dynamicMethod(...dynamicArgs.reverse())
+				program.push(value)
+			} else {
+				const method = getMethodHandle(
+					invokeDynamic.bootstrapMethodClass,
+					invokeDynamic.bootstrapMethodName,
+				)
+				// Invoke the method
+				// "type": "java/lang/invoke/MethodHandles$Lookup","index": 0
+				// "type": "java/lang/String","index": 1
+				// "type": "java/lang/invoke/MethodType","index": 2
+				const lookup = undefined
+				const methodName = invokeDynamic.dynamicName
+				const type = undefined
+				const dynamicMethod = method(
+					lookup,
+					methodName,
+					type,
+					...invokeDynamic.bootstrapMethodArguments,
+				)
+				// Remind this dynamic method for future invokation
+				program.virtualInvokes[lookupName] = dynamicMethod
+				const dynamicArgs = []
+				for (let i = 0; i < invokeDynamic.dynamicParametersCount; i++)
+					dynamicArgs.push(program.pop())
+				const value = dynamicMethod(...dynamicArgs.reverse())
+				program.push(value)
 			}
-			throw new NotImplemented(hex(instruction) + " not implemented")
-			console.error(stringify(invokeDynamic))
-			console.log(finalargs)
-			const result = methodHandle(...finalargs)
-			program.push(result)
-		} else if(instruction == 0x4e){
+		} else if (instruction == 0x4e) {
 			// astore_3
 			const value = program.pop()
 			program.variables[3] = value
-		} else if(instruction == 0x2d){
+		} else if (instruction == 0x2d) {
 			// aload_3
 			const value = program.variables[3]
 			program.push(value)
-		}else {
+		} else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}

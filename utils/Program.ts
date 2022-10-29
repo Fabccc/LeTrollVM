@@ -1,11 +1,14 @@
 import { CodeAttribute } from "./Type"
 
-class Program {
+export default class Program {
 	private instruction: Uint8Array
 	public programCounter: number = 0
 	public readonly endOfProgram: number
 	public localVariableCount: number
 	public debug: boolean = true
+
+	// Virtual Invokes
+	public virtualInvokes: any = {}
 
 	// Stacks
 	public stack: any[] = []
@@ -32,9 +35,9 @@ class Program {
 		return this.instruction[this.programCounter++]
 	}
 
-	public padZero(){
+	public padZero() {
 		const zero = this.readInstruction()
-		if(zero != 0){
+		if (zero != 0) {
 			throw new Error("Padding with zero failed")
 		}
 	}
@@ -65,4 +68,3 @@ class Program {
 		if (this.debug) console.log(val)
 	}
 }
-export default Program
