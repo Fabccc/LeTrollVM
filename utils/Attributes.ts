@@ -120,6 +120,30 @@ export function readAttributeInfo(
 				bootstrapMethods.push({ bootstrapMethodRef, bootstrapArguments })
 			}
 			attributes.push({ name, bootstrapMethods })
+		} else if (name == "StackMapTable") {
+			// 	u2              number_of_entries;
+			// stack_map_frame entries[number_of_entries];
+			const entriesCount = reader.readU2()
+			const entries = []
+			/*union stack_map_frame {
+				same_frame;
+				same_locals_1_stack_item_frame;
+				same_locals_1_stack_item_frame_extended;
+				chop_frame;
+				same_frame_extended;
+				append_frame;
+				full_frame;
+			}*/
+			for (let i = 0; i < entriesCount; i++) {
+				const frameType = reader.readU1()
+				if(frameType >= 0 && frameType <= 63){
+					const offsetDelta = frameType
+					entries.push({offsetDelta})
+				}else{
+					throw new NotImplemented(`StackMapTable ${frameType} value is not implemented`)
+				}
+			}
+			attributes.push({name, entries})
 		} else {
 			throw new NotImplemented("Attribute reading undefined for " + name)
 		}
@@ -127,7 +151,10 @@ export function readAttributeInfo(
 	return attributes
 }
 
-export function findAttributeByName(attribs: Attribute[], name: string): Attribute {
+export function findAttributeByName(
+	attribs: Attribute[],
+	name: string,
+): Attribute {
 	for (const attrib of attribs) {
 		if (attrib.name == name) return attrib
 	}

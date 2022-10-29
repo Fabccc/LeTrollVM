@@ -1,21 +1,24 @@
 import { existsSync, openSync } from "fs"
 import { exit } from "process"
-import { listClassAccesors, listMethodAccesors } from "./utils/Accessors"
+import {
+	listClassAccesors,
+	listFieldAccessors,
+	listMethodAccesors,
+} from "./utils/Accessors"
 import { readAttributeInfo } from "./utils/Attributes"
 import BufferedReader from "./utils/BufferedReader"
 import Class from "./utils/Class"
 import {
-	ConstantPool,
-	printClassInfo,
 	readClassInfo,
 	readConstantPool,
 	readNameIndex,
+	readUtf8,
 } from "./utils/ConstantPool"
-import { betterMethodDescriptor } from "./utils/Descriptors"
+import { betterDescriptor, betterMethodDescriptor } from "./utils/Descriptors"
 import NotImplemented from "./utils/errors/NotImplemented"
-import { executeMethod } from "./utils/Methods"
+import { stringify } from "./utils/Print"
 
-const FILE_NAME = "Main.class"
+const FILE_NAME = "Fibonnaci.class"
 
 console.log("---------- LeTroll VM -------------")
 console.log("By Fabcc [Fabien CAYRE]")
@@ -81,7 +84,31 @@ console.log(`Fields count ${fieldsCount}`)
 const fields = []
 // field_info     fields[fields_count];
 for (let i = 0; i < fieldsCount; i++) {
-	throw new NotImplemented("Fields not implemetend yet")
+	// u2             access_flags;
+	// u2             name_index;
+	// u2             descriptor_index;
+	// u2             attributes_count;
+	// attribute_info attributes[attributes_count];
+	const accessFlagsMask = reader.readU2()
+	const fieldFlags = listFieldAccessors(accessFlagsMask)
+	const nameIndex = reader.readU2()
+	const fieldName = readNameIndex(constantPool, nameIndex - 1)
+	const descriptorIndex = reader.readU2()
+	const fieldDescriptor = readUtf8(constantPool, descriptorIndex - 1)
+	const attributeCount = reader.readU2()
+	const attributeInfo = readAttributeInfo(reader, attributeCount, constantPool)
+	if(fieldFlags.includes("STATIC")){
+		klass.fields.push({
+			attributes: attributeInfo,
+			descriptor: fieldDescriptor,
+			flags: fieldFlags,
+			name: fieldName,
+			type: betterDescriptor(fieldDescriptor)
+		})
+		klass.staticFields[fieldName] = 0
+	}else{
+		throw new NotImplemented("Only static fields implemented yet")
+	}
 }
 // u2             methods_count;
 const methodsCount = reader.readU2()
@@ -116,4 +143,5 @@ klass.attributes = readAttributeInfo(reader, attributesCount, constantPool)
 klass.methods = methods
 
 // console.log(JSON.stringify(methods, null, 1))
+klass.resolve()
 klass.executeMethod("main")

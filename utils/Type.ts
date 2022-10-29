@@ -14,7 +14,7 @@ export interface MethodData {
 }
 
 export interface MethodArgument {
-	index: number,
+	index: number
 	type: string
 }
 
@@ -29,14 +29,14 @@ export interface NameAndType {
 	desc: string
 }
 
-export interface InvokeDynamic{
-	name: "InvokeDynamic",
-	bootstrapMethodClass: string,
-	bootstrapMethodDescriptor: string,
-	bootstrapMethodName: string,
+export interface InvokeDynamic {
+	name: "InvokeDynamic"
+	bootstrapMethodClass: string
+	bootstrapMethodDescriptor: string
+	bootstrapMethodName: string
 	bootstrapMethodArguments: any[]
-	dynamicName: string,
-	dynamicDescriptor: string,
+	dynamicName: string
+	dynamicDescriptor: string
 	dynamicParametersCount: number
 }
 
@@ -60,13 +60,13 @@ export interface CodeAttribute extends Attribute {
 	codeAttributes: Attribute[]
 }
 
-export interface BootstrapMethodsAttribute extends Attribute{
+export interface BootstrapMethodsAttribute extends Attribute {
 	name: "BootstrapMethods"
 	bootstrapMethods: BootstrapMethods[]
 }
 
-export interface BootstrapMethods extends Attribute{
-	bootstrapMethodRef: number,
+export interface BootstrapMethods extends Attribute {
+	bootstrapMethodRef: number
 	bootstrapArguments: number[]
 }
 
@@ -80,6 +80,15 @@ export interface InnerClasses {
 	outerClassInfoIndex: number
 	innerNameIndex: number
 	innerClassAccessFlags: number
+}
+
+export interface StackMapTable extends Attribute{
+	name: "StackMapTable"
+	entries: StackMapEntries[]
+}
+
+export interface StackMapEntries{
+	offsetDelta: number
 }
 
 export interface LineNumberTableAttribute extends Attribute {
@@ -98,17 +107,24 @@ export interface Exception {
 	catchType: number
 }
 
-
-export interface MethodHandle{
-	name: string,
-	klass: string,
-	methodName: string,
-	methodDescriptor: string,
-	referenceKind: number,
+export interface MethodHandle {
+	name: string
+	klass: string
+	methodName: string
+	methodDescriptor: string
+	referenceKind: number
 	referenceKindName: string
 }
 
-export interface Arguments{
+export interface Field {
+	name: string
+	flags: string[]
+	type: string
+	descriptor: string
+	attributes: Attribute[]
+}
+
+export interface Arguments {
 	value: any
 	type: string
 }

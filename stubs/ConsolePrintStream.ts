@@ -1,4 +1,6 @@
+import { stdout } from "bun"
 import NotImplemented from "../utils/errors/NotImplemented"
+import { stringify } from "../utils/Print"
 import { StubClass } from "./StubClass"
 
 class ConsolePrintStream extends StubClass {
@@ -25,11 +27,23 @@ class ConsolePrintStream extends StubClass {
 			console.log(args[0].toString())
 		} else if (methodDescriptor == "(J)V") {
 			console.log(args[0].toString())
-		} else if (methodDescriptor == "(D)V"){
-			console.log(args[0].toString())			
-		}else {
+		} else if (methodDescriptor == "(D)V") {
+			console.log(args[0].toString())
+		} else {
 			throw new NotImplemented(
 				"Console log with descriptor " +
+					methodDescriptor +
+					" is not implemented",
+			)
+		}
+	}
+
+	public print(methodDescriptor: string, ...args) {
+		if (methodDescriptor == "(Ljava/lang/String;)V") {
+			Bun.write(Bun.stdout, args.join(""))
+		} else {
+			throw new NotImplemented(
+				"Console log (no new line) with descriptor " +
 					methodDescriptor +
 					" is not implemented",
 			)

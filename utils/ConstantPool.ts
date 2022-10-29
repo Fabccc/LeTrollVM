@@ -104,11 +104,19 @@ function readFloat(constantPool: ConstantPool, indexInfo: number): number {
 	return value
 }
 
+export function readUtf8(constantPool: ConstantPool, indexInfo: number): string {
+	const { value } = constantPool.at(indexInfo)
+	return value
+}
+
+
 function readString(constantPool: ConstantPool, indexInfo: number): string {
 	const cstValue = constantPool.at(indexInfo)
 	const { value } = constantPool.at(cstValue.stringIndex - 1)
 	return value
 }
+
+
 
 export function readMethodHandleInfo(
 	klass: Class,

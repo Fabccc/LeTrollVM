@@ -45,8 +45,6 @@ export function executeMethod(
 	klass: Class,
 	...arg: Arguments[]
 ): any {
-	console.log("Executing " + method.methodName + " | " + method.methodSignature)
-	console.log("---------- LeTroll VM -------------")
 	const { constantPool, attributes } = klass
 	const codeAttribute = getCodeAttribute(method)
 	const program = new Program(codeAttribute)
@@ -69,10 +67,12 @@ export function executeMethod(
 		const programIndex = program.programCounter - 1
 		if (instruction == 0xb1) {
 			// return :)
+			program.log(`#${programIndex} return `)
 			return
 		} else if (instruction == 0x10) {
 			// bipush
 			const value = program.readInstruction()
+			program.log(`#${programIndex} bipush ${value}`)
 			program.push(value)
 		} else if (instruction == 0xb2) {
 			// getstatic
@@ -85,7 +85,11 @@ export function executeMethod(
 					ref.field
 				} => ${betterDescriptor(ref.fieldType)}`,
 			)
-			program.push(ref)
+			if (ref.klass == klass.name) {
+				program.push(klass.staticFields[ref.field])
+			} else {
+				program.push(ref)
+			}
 		} else if (instruction == 0x12) {
 			// ldc
 			const index = program.readInstruction() // ref to a value on the constant pool
@@ -127,10 +131,21 @@ export function executeMethod(
 					const instance = getFieldHandle(fieldref.klass, fieldref.field)
 					if (instance == undefined) {
 						throw new NotImplemented(
-							"Stub for " + JSON.stringify(fieldref, null, 1) + " not found",
+							"Stub instance for " +
+								JSON.stringify(fieldref, null, 1) +
+								" not found",
 						)
 					}
 					const methodHandle = instance[methodRef.methodName]
+					if (methodHandle == undefined) {
+						throw new NotImplemented(
+							"Stub method " +
+								methodRef.methodName +
+								" for " +
+								JSON.stringify(fieldref, null, 1) +
+								" not found",
+						)
+					}
 					methodHandle(methodRef.methodDescriptor, value)
 				} else {
 					throw new NotImplemented(
@@ -151,6 +166,7 @@ export function executeMethod(
 			const indexbyte2 = program.readInstruction() // ref to a value on the constant pool
 			const index = (indexbyte1 << 8) | indexbyte2
 			const cstValue = constantPool.at(index - 1)
+			program.log(`#${programIndex} ldc2_w ${stringify(cstValue, 0)}`)
 			if (cstValue.name == "Long") {
 				program.push(cstValue.value)
 			} else if (cstValue.name == "Double") {
@@ -161,59 +177,73 @@ export function executeMethod(
 				)
 			}
 		} else if (instruction == 0x3) {
+			program.log(`#${programIndex} iconst_0`)
 			// iconst_0
 			program.push(0)
 		} else if (instruction == 0x4) {
+			program.log(`#${programIndex} iconst_1`)
 			//iconst_1
 			program.push(1)
 		} else if (instruction == 0x5) {
+			program.log(`#${programIndex} iconst_2`)
 			//iconst_2
 			program.push(2)
 		} else if (instruction == 0x8) {
+			program.log(`#${programIndex} iconst_5`)
 			//iconst_5
 			program.push(5)
 		} else if (instruction == 0x36) {
 			//istore
 			const index = program.readInstruction()
 			const value = program.pop()
+			program.log(`#${programIndex} istore ${value}`)
 			program.variables[index] = value
 		} else if (instruction == 0x3c) {
 			//istore_1
+			program.log(`#${programIndex} istore_1`)
 			const intValue = program.pop()
 			program.variables[1] = intValue
 		} else if (instruction == 0x3d) {
 			//istore_2
+			program.log(`#${programIndex} istore_2`)
 			const intValue = program.pop()
 			program.variables[2] = intValue
 		} else if (instruction == 0x3e) {
 			//istore_3
+			program.log(`#${programIndex} istore_3`)
 			const intValue = program.pop()
 			program.variables[3] = intValue
 		} else if (instruction == 0x15) {
 			//iload
+			program.log(`#${programIndex} iload`)
 			const index = program.readInstruction()
 			const intValue = program.variables[index]
 			program.push(intValue)
 		} else if (instruction == 0x1a) {
 			//iload_0
+			program.log(`#${programIndex} iload_0`)
 			const intValue = program.variables[0]
 			program.push(intValue)
 		} else if (instruction == 0x1b) {
 			//iload_1
+			program.log(`#${programIndex} iload_1`)
 			const intValue = program.variables[1]
 			program.push(intValue)
 		} else if (instruction == 0x1c) {
 			//iload_2
+			program.log(`#${programIndex} iload_2`)
 			const intValue = program.variables[2]
 			program.push(intValue)
 		} else if (instruction == 0x1d) {
 			//iload_3
+			program.log(`#${programIndex} iload_3`)
 			const intValue = program.variables[3]
 			program.push(intValue)
 		} else if (instruction == 0x11) {
 			// sipush
 			// byte1
 			// byte2
+			program.log(`#${programIndex} sipush`)
 			const byte1 = program.readInstruction()
 			const byte2 = program.readInstruction()
 			const value = (byte1 << 8) | byte2
@@ -221,20 +251,24 @@ export function executeMethod(
 		} else if (instruction == 0x17) {
 			// fload
 			// index
+			program.log(`#${programIndex} fload`)
 			const index = program.readInstruction()
 			const value = program.variables[index]
 			program.push(value)
 		} else if (instruction == 0x23) {
 			// fload_1
+			program.log(`#${programIndex} fload_1`)
 			const value = program.variables[1]
 			program.push(value)
 		} else if (instruction == 0x24) {
 			// fload_2
+			program.log(`#${programIndex} fload_2`)
 			const value = program.variables[2]
 			program.push(value)
 		} else if (instruction == 0x38) {
 			// fstore
 			// index
+			program.log(`#${programIndex} fstore `)
 			const index = program.readInstruction()
 			program.variables[index] = program.pop()
 		} else if (instruction == 0x44) {
@@ -423,6 +457,10 @@ export function executeMethod(
 			// astore_1
 			const objectref = program.pop()
 			program.variables[1] = objectref
+		} else if (instruction == 0x2a) {
+			// aload_0
+			const objectref = program.variables[0]
+			program.push(objectref)
 		} else if (instruction == 0x2b) {
 			// aload_1
 			const objectref = program.variables[1]
@@ -531,7 +569,54 @@ export function executeMethod(
 			}
 		} else if (instruction == 0xac) {
 			// ireturn
+			program.log(`#${programIndex} ireturn `)
 			return program.pop()
+		} else if (instruction == 0x9e) {
+			// ifle
+			program.log(`#${programIndex} ifle `)
+			//branchbyte1
+			const branchbyte1 = program.readInstruction()
+			//branchbyte2
+			const branchbyte2 = program.readInstruction()
+			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			// if less or equal
+			const value = program.pop()
+			if (value <= 0) {
+				program.cursor(branchbyte)
+			}
+		} else if (instruction == 0xb3) {
+			// put static
+			program.log(`#${programIndex} putstatic `)
+			//indexbyte1
+			const indexbyte1 = program.readInstruction()
+			//indexbyte2
+			const indexbyte2 = program.readInstruction()
+			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
+			const ref = readFieldrefInfo(constantPool, constantPoolIndex - 1)
+			if (ref.klass == klass.name) {
+				const value = program.pop()
+				klass.staticFields[ref.field] = value
+			} else {
+				throw new NotImplemented(
+					hex(instruction) + " not implemented for foreign static field klass",
+				)
+			}
+		} else if (instruction == 0xb7) {
+			// invokespecial
+			//indexbyte1
+			const indexbyte1 = program.readInstruction()
+			//indexbyte2
+			const indexbyte2 = program.readInstruction()
+			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
+			const ref = readMethodrefInfo(constantPool, constantPoolIndex - 1)
+			if (ref.klass == "java/lang/Object" && ref.methodName == "<init>") {
+			} else {
+				throw new NotImplemented(
+					hex(instruction) +
+						" not implemented for special " +
+						stringify(ref, 0),
+				)
+			}
 		} else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
