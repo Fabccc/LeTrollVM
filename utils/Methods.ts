@@ -451,15 +451,27 @@ export function executeMethod(method: Method, klass: Class): any {
 				const value = dynamicMethod(...dynamicArgs.reverse())
 				program.push(value)
 			}
-		} else if (instruction == 0x4e) {
+		} else if(instruction == 0x3a){
+			// astore
+			const index = program.readInstruction()
+			program.variables[index] = program.pop()
+		}else if (instruction == 0x4e) {
 			// astore_3
 			const value = program.pop()
 			program.variables[3] = value
-		} else if (instruction == 0x2d) {
+		} else if(instruction == 0x19){
+			// aload
+			const index = program.readInstruction()
+			const value = program.variables[index]
+			program.push(value)
+		}else if (instruction == 0x2d) {
 			// aload_3
 			const value = program.variables[3]
 			program.push(value)
-		} else {
+		}else if(instruction == 0x1){
+			// aconst_null
+			program.push(null)
+		}else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}
