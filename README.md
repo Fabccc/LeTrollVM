@@ -54,15 +54,15 @@ Java Virtual Machine written in Typescript and executed with BunJS.
   - [x] string
     - [x] concatenation
     - [ ] substring ??? (im crazy)
-  - string & others
+  - [x] string & others
     - [x] concat string and string
-    - [ ] concat string and boolean
-    - [ ] concat string and byte
-    - [ ] concat string and short
-    - [ ] concat string and int
-    - [ ] concat string and float
-    - [ ] concat string and double
-    - [ ] concat string and long
+    - [x] concat string and boolean
+    - [x] concat string and byte
+    - [x] concat string and short
+    - [x] concat string and int
+    - [x] concat string and float
+    - [x] concat string and double
+    - [x] concat string and long
 - [ ] Methods call
   - [ ] return void method call
   - [ ] return something method calls

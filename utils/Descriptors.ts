@@ -60,7 +60,11 @@ export function descriptorInfo(desc: string): MethodData {
 			arg += "char"
 		} else if (charAt == "Z") {
 			arg += "boolean"
-		} else {
+		} else if(charAt == "B"){
+			arg += "byte"
+		} else if(charAt == "S"){
+			arg += "short"
+		}else {
 			throw new NotImplemented("Descriptor for " + charAt + " not implemetend")
 		}
 		if (setArrayLevel) {
