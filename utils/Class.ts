@@ -1,3 +1,4 @@
+import ClassManager from "./ClassLoader"
 import { ConstantPool } from "./ConstantPool"
 import NotImplemented from "./errors/NotImplemented"
 import { executeMethod } from "./Methods"
@@ -29,15 +30,15 @@ export default class Class {
 		this.major = major
 	}
 
-	resolve() {
-		this.executeMethod("<init>")
-		this.executeMethod("<clinit>")
+	resolve(classManager: ClassManager) {
+		this.executeMethod("<init>", classManager)
+		this.executeMethod("<clinit>", classManager)
 	}
 
-	executeMethod(methodName: string, ...arg: any): any {
+	executeMethod(methodName: string, classManager: ClassManager, ...arg: any): any {
 		for (const method of this.methods) {
 			if (method.methodName == methodName) {
-				return executeMethod(method, this, ...arg)
+				return executeMethod(method, this, classManager, ...arg)
 			}
 		}
 		if(methodName == "<clinit>"){

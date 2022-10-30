@@ -1,4 +1,5 @@
 import Class from "./Class"
+import ClassManager from "./ClassLoader"
 import {
 	ConstantPool,
 	readFieldrefInfo,
@@ -43,6 +44,7 @@ export function getCodeAttribute(method: Method): CodeAttribute {
 export function executeMethod(
 	method: Method,
 	klass: Class,
+	classManager: ClassManager,
 	...arg: Arguments[]
 ): any {
 	const { constantPool, attributes } = klass
@@ -542,29 +544,25 @@ export function executeMethod(
 			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
 			const methodRef = readMethodrefInfo(constantPool, constantPoolIndex - 1)
 			const methodDesc = descriptorInfo(methodRef.methodDescriptor)
-			if (methodRef.klass == klass.name) {
-				if (program.stackSize >= methodDesc.argCount) {
-					let args: Arguments[] = []
-					for (let i = 0; i < methodDesc.argCount; i++) {
-						const { type } = methodDesc.argType[i]
-						args.push({
-							type: type,
-							value: program.pop(),
-						})
-					}
-					const result = klass.executeMethod(
-						methodRef.methodName,
-						...args.reverse(),
-					)
-					program.push(result)
-				} else {
-					throw new NotImplemented(
-						`Invalid stack size (stacksize=${program.stackSize}, methodArgCount=${methodDesc.argCount})`,
-					)
+			const classRef = classManager.get(methodRef.klass)
+			if (program.stackSize >= methodDesc.argCount) {
+				let args: Arguments[] = []
+				for (let i = 0; i < methodDesc.argCount; i++) {
+					const { type } = methodDesc.argType[i]
+					args.push({
+						type: type,
+						value: program.pop(),
+					})
 				}
+				const result = classRef.executeMethod(
+					methodRef.methodName,
+					classManager,
+					...args.reverse(),
+				)
+				program.push(result)
 			} else {
 				throw new NotImplemented(
-					hex(instruction) + " doesn't implement multiclass loading",
+					`Invalid stack size (stacksize=${program.stackSize}, methodArgCount=${methodDesc.argCount})`,
 				)
 			}
 		} else if (instruction == 0xac) {
