@@ -170,3 +170,6 @@ dist
 
 bun.lockb
 *.class
+
+# I downloaded 624 pages of JVM definition :LeTroll:
+*.pdf
