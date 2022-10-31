@@ -1,5 +1,5 @@
 import BufferedReader from "./BufferedReader"
-import { ConstantPool, readNameIndex } from "./ConstantPool"
+import { ConstantPool, readClassInfo, readNameIndex } from "./ConstantPool"
 import NotImplemented from "./errors/NotImplemented"
 import { Attribute } from "./Type"
 
@@ -136,16 +136,46 @@ export function readAttributeInfo(
 			}*/
 			for (let i = 0; i < entriesCount; i++) {
 				const frameType = reader.readU1()
-				if(frameType >= 0 && frameType <= 63){
+				if (frameType >= 0 && frameType <= 63) {
 					const offsetDelta = frameType
-					entries.push({offsetDelta})
-				}else{
-					throw new NotImplemented(`StackMapTable ${frameType} value is not implemented`)
+					entries.push({ offsetDelta })
+				} else if (frameType == 255) {
+					// 	full_frame {
+					// 		u2 offset_delta;
+					const offsetDelta = reader.readU2()
+					// 		u2 number_of_locals;
+					const numberOfLocals = reader.readU2()
+					const localsVerifications = readVerifications(
+						numberOfLocals,
+						constantPool,
+						reader,
+					)
+					// 		verification_type_info locals[number_of_locals];
+					// }
+
+					// 		u2 number_of_stack_items;
+					const numberOfStackItems = reader.readU2()
+					// 		verification_type_info stack[number_of_stack_items];
+					const stacksVerifications = readVerifications(
+						numberOfStackItems,
+						constantPool,
+						reader,
+					)
+
+					entries.push({
+						offsetDelta,
+						localsVerifications,
+						stacksVerifications,
+					})
+				} else {
+					throw new NotImplemented(
+						`Attribute: StackMapTable ${frameType} value is not implemented`,
+					)
 				}
 			}
-			attributes.push({name, entries})
+			attributes.push({ name, entries })
 		} else {
-			throw new NotImplemented("Attribute reading undefined for " + name)
+			throw new NotImplemented("Attribute: reading undefined for " + name)
 		}
 	}
 	return attributes
@@ -159,4 +189,39 @@ export function findAttributeByName(
 		if (attrib.name == name) return attrib
 	}
 	throw new NotImplemented(`Could not find attribute with name ${name}`)
+}
+
+export function readVerifications(
+	numberOfVerifs: number,
+	constantPool: ConstantPool,
+	reader: BufferedReader,
+): any[] {
+	const localsVerifications = []
+	for (let j = 0; j < numberOfVerifs; j++) {
+		const tag = reader.readU1()
+		if (tag == 7) {
+			// Object_variable_info {
+			// 	u1 tag = ITEM_Object; /* 7 */
+			// 	u2 cpool_index;
+			// }
+			const constantPoolIndex = reader.readU2()
+			const classInfo = readClassInfo(constantPool, constantPoolIndex - 1)
+			localsVerifications.push(classInfo)
+		} else if (tag == 1) {
+			// Integer_variable_info {
+			// 	u1 tag = ITEM_Integer; /* 1 */
+			// }
+			localsVerifications.push("int")
+		} else if (tag == 0) {
+			// 	Top_variable_info {
+			// 		u1 tag = ITEM_Top; /* 0 */
+			// }
+			localsVerifications.push("top")
+		} else {
+			throw new NotImplemented(
+				`Attribute: vertification type locals ${tag} is not implemented`,
+			)
+		}
+	}
+	return localsVerifications
 }

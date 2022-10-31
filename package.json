@@ -6,6 +6,7 @@
     "bun-types": "^0.1.0"
   },
   "scripts": {
-    "exec": "bun index.ts"
+    "exec": "bun index.ts",
+    "buildClass": "cd runtime && javac -sourcepath . *.java"
   }
 }

@@ -582,6 +582,25 @@ export function executeMethod(
 			if (value <= 0) {
 				program.cursor(branchbyte)
 			}
+		} else if (instruction == 0xa2) {
+			//if_icmpge
+			//branchbyte1
+			const branchbyte1 = program.readInstruction()
+			//branchbyte2
+			const branchbyte2 = program.readInstruction()
+			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			const value2 = program.pop()
+			const value1 = program.pop()
+			//if_icmpge succeeds if and only if value1 ≥ value2
+			program.log(
+				`#${programIndex} if_icmpge ${
+					(branchbyte + programIndex) % program.instructionSize
+				} : ${value1} >= ${value2}`,
+			)
+			if (value1 >= value2) {
+				const location = (branchbyte + programIndex) % program.instructionSize
+				program.cursor(location)
+			}
 		} else if (instruction == 0xb3) {
 			// put static
 			program.log(`#${programIndex} putstatic `)
@@ -591,6 +610,7 @@ export function executeMethod(
 			const indexbyte2 = program.readInstruction()
 			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
 			const ref = readFieldrefInfo(constantPool, constantPoolIndex - 1)
+			program.log(`#${programIndex} putstatic ${stringify(ref, 0)}`)
 			if (ref.klass == klass.name) {
 				const value = program.pop()
 				klass.staticFields[ref.field] = value
@@ -607,6 +627,7 @@ export function executeMethod(
 			const indexbyte2 = program.readInstruction()
 			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
 			const ref = readMethodrefInfo(constantPool, constantPoolIndex - 1)
+			program.log(`#${programIndex} invokespecial ${stringify(ref, 0)}`)
 			if (ref.klass == "java/lang/Object" && ref.methodName == "<init>") {
 			} else {
 				throw new NotImplemented(
@@ -615,6 +636,26 @@ export function executeMethod(
 						stringify(ref, 0),
 				)
 			}
+		} else if (instruction == 0x84) {
+			// iinc
+			// index
+			const index = program.readInstruction()
+			// const
+			const value = program.readInstruction()
+			program.variables[index] += value
+		} else if (instruction == 0xa7) {
+			// goto
+			//branchbyte 1
+			const branchbyte1 = program.readInstruction()
+			//branchbyte2
+			const branchbyte2 = program.readInstruction()
+			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			program.log(
+				`#${programIndex} goto ${branchbyte % program.instructionSize}`,
+			)
+			program.cursor(branchbyte)
+		} else if (instruction == 0x0) {
+			// noop
 		} else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}

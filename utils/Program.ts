@@ -46,6 +46,10 @@ export default class Program {
 		return this.programCounter < this.endOfProgram
 	}
 
+	public get instructionSize(): number{
+		return this.instruction.length
+	}
+
 	public get stackSize(): number {
 		return this.stack.length
 	}
@@ -54,25 +58,37 @@ export default class Program {
 		if (this.stack.length >= this.maxStackSize) {
 			throw new Error("Stack overflow")
 		}
-		if(this.debug){
-			console.error(`(=>) Pushing ${variable}`)
+		if (this.debug) {
+			// console.error(`(=>) Pushing ${variable}`)
 		}
 		this.stack.push(variable)
 	}
-
-	public cursor(cursor: number){
-		if(cursor >= this.instruction.length){
-			throw new Error("Program counter overflow")
+	public offset(cursor: number) {
+		const finalValue = cursor + this.programCounter % this.instruction.length
+		if (finalValue >= this.instruction.length) {
+			throw new Error(
+				`Program counter overflow (cursor=${finalValue}, instruction_length=${this.instruction.length})`,
+			)
 		}
-		this.programCounter = cursor
+		this.programCounter = finalValue
+	}
+
+	public cursor(cursor: number) {
+		const finalValue = cursor % this.instruction.length
+		if (finalValue >= this.instruction.length) {
+			throw new Error(
+				`Program counter overflow (cursor=${finalValue}, instruction_length=${this.instruction.length})`,
+			)
+		}
+		this.programCounter = finalValue
 	}
 
 	public pop(): any {
 		if (this.stack.length == 0) {
 			throw new Error("Stack empty")
 		}
-		if(this.debug){
-			console.error(`(<=) Poping ${this.stack[this.stack.length-1]}`)
+		if (this.debug) {
+			// console.error(`(<=) Poping ${this.stack[this.stack.length - 1]}`)
 		}
 		return this.stack.pop()
 	}
