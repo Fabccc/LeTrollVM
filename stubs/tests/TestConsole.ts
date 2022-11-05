@@ -25,7 +25,9 @@ class TestConsole extends StubClass {
 			const len = dec && dec.length > 1 ? dec.length : 1
 			// print
 			this.printlnLines.push(num.toFixed(len))
-		} else {
+		} else if(methodDescriptor == "(J)V"){
+			this.printlnLines.push((args[0] as number).toString())
+		}else {
 			throw new NotImplemented(
 				"Console test log with descriptor " +
 					methodDescriptor +
