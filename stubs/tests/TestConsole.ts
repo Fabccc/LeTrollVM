@@ -1,3 +1,4 @@
+import { scientificNotation } from "@base/Utils"
 import NotImplemented from "../../utils/errors/NotImplemented"
 import { StubClass } from "../StubClass"
 
@@ -18,16 +19,22 @@ class TestConsole extends StubClass {
 			this.printlnLines.push(args[0])
 		} else if (methodDescriptor == "(I)V") {
 			this.printlnLines.push((args[0] as number).toString())
-		} else if (methodDescriptor == "(D)V") {
+		} else if (methodDescriptor == "(D)V" || methodDescriptor == "(F)V") {
 			// if number has no decimal, add a ".0"
 			const num = args[0] as number
 			const dec = num.toString().split(".")[1]
 			const len = dec && dec.length > 1 ? dec.length : 1
 			// print
-			this.printlnLines.push(num.toFixed(len))
-		} else if(methodDescriptor == "(J)V"){
+			const [mantisa, exp] = scientificNotation(num)
+			if (exp >= 7 || exp <= -4) {
+				this.printlnLines.push(mantisa + "E" + exp)
+			} else {
+				console.log(">= Printlnlines "+num+" to fixed ("+len+")")
+				this.printlnLines.push(num.toFixed(len))
+			}
+		} else if (methodDescriptor == "(J)V") {
 			this.printlnLines.push((args[0] as number).toString())
-		}else {
+		} else {
 			throw new NotImplemented(
 				"Console test log with descriptor " +
 					methodDescriptor +

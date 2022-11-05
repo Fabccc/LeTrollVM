@@ -130,10 +130,7 @@ export function executeMethod(
 				const value = program.pop()
 				const fieldref = program.pop() as Fieldref
 				if (betterDescriptor(fieldref.fieldType) == methodRef.klass) {
-					const instance = stubs.getFieldHandle(
-						fieldref.klass,
-						fieldref.field,
-					)
+					const instance = stubs.getFieldHandle(fieldref.klass, fieldref.field)
 					if (instance == undefined) {
 						throw new NotImplemented(
 							"Stub instance for " +
@@ -196,6 +193,10 @@ export function executeMethod(
 			program.log(`#${programIndex} iconst_2`)
 			//iconst_2
 			program.push(2)
+		} else if (instruction == 0x6) {
+			program.log(`#${programIndex} iconst_3`)
+			//iconst_3
+			program.push(3)
 		} else if (instruction == 0x8) {
 			program.log(`#${programIndex} iconst_5`)
 			//iconst_5
@@ -663,7 +664,44 @@ export function executeMethod(
 			program.cursor(branchbyte)
 		} else if (instruction == 0x0) {
 			// noop
-		} else {
+		} else if (instruction == 0x85) {
+			// i2l int to long
+			program.push(BigInt(program.pop()))
+		} else if (instruction == 0x8a) {
+			// l2d long to double
+			const value = program.pop() as BigInt
+			program.push(Number(value))
+		} else if (instruction == 0x86) {
+			// i2f int to float
+			program.push(program.pop())
+		} else if (instruction == 0x8d) {
+			// f2d float to double
+			program.push(program.pop())
+		} else if (instruction == 0x7e) {
+			// iand int and
+			const value2 = program.pop()
+			const value1 = program.pop()
+			const value = value1 & value2
+			program.push(value)
+		} else if (instruction == 0x80) {
+			// ior int or
+			const value2 = program.pop()
+			const value1 = program.pop()
+			const value = value1 | value2
+			program.push(value)
+		} else if(instruction == 0x78){
+			// ishl int shift left
+			const value2 = program.pop()
+			const value1 = program.pop()
+			const value = value1 << value2
+			program.push(value)
+		} else if(instruction == 0x7a){
+			// ishr int shift right
+			const value2 = program.pop()
+			const value1 = program.pop()
+			const value = value1 >> value2
+			program.push(value)
+		}else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}
