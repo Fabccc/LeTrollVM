@@ -138,7 +138,7 @@ export function readAttributeInfo(
 				const frameType = reader.readU1()
 				if (frameType >= 0 && frameType <= 63) {
 					const offsetDelta = frameType
-					entries.push({ offsetDelta })
+					entries.push({ frameType, offsetDelta })
 				} else if (frameType == 255) {
 					// 	full_frame {
 					// 		u2 offset_delta;
@@ -163,9 +163,27 @@ export function readAttributeInfo(
 					)
 
 					entries.push({
+						frameType,
 						offsetDelta,
 						localsVerifications,
 						stacksVerifications,
+					})
+				} else if (frameType == 253) {
+					// 	u2 offset_delta;
+					const offsetDelta = reader.readU2()
+					const numberOfVerifs = frameType - 251
+					// 	verification_type_info locals[frame_type - 251];
+					const verifs = readVerifications(numberOfVerifs, constantPool, reader)
+					entries.push({
+						frameType,
+						offsetDelta,
+						verifs,
+					})
+				} else if (frameType == 250) {
+					const offsetDelta = reader.readU2()
+					entries.push({
+						frameType,
+						offsetDelta,
 					})
 				} else {
 					throw new NotImplemented(

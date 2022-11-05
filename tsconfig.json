@@ -11,5 +11,11 @@
     // "bun-types" is the important part
     "types": ["bun-types"],
     // "experimentalDecorators": true
+    "baseUrl": "./",
+    "paths": {
+      "@base/*": ["utils/*"],
+      "@stub/*": ["stubs/*"],
+      "@err/*": ["utils/errors/*"]
+    }
   }
 }

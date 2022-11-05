@@ -1,0 +1,117 @@
+Classfile /home/fabien/PPerso/LeTrollVM/runtime/string/ForLoopStringBuilder.class
+  Last modified 31 oct. 2022; size 1003 bytes
+  SHA-256 checksum 538a0355ae32a26b435b4f00a54fc4b86ea309cb3814f0189fd6ea72c54ccd51
+  Compiled from "ForLoopStringBuilder.java"
+public class runtime.string.ForLoopStringBuilder
+  minor version: 0
+  major version: 55
+  flags: (0x0021) ACC_PUBLIC, ACC_SUPER
+  this_class: #6                          // runtime/string/ForLoopStringBuilder
+  super_class: #7                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 2, attributes: 3
+Constant pool:
+   #1 = Methodref          #7.#18         // java/lang/Object."<init>":()V
+   #2 = String             #19            // Salut !
+   #3 = InvokeDynamic      #0:#23         // #0:makeConcatWithConstants:(Ljava/lang/String;I)Ljava/lang/String;
+   #4 = Fieldref           #24.#25        // java/lang/System.out:Ljava/io/PrintStream;
+   #5 = Methodref          #26.#27        // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #6 = Class              #28            // runtime/string/ForLoopStringBuilder
+   #7 = Class              #29            // java/lang/Object
+   #8 = Utf8               <init>
+   #9 = Utf8               ()V
+  #10 = Utf8               Code
+  #11 = Utf8               LineNumberTable
+  #12 = Utf8               main
+  #13 = Utf8               ([Ljava/lang/String;)V
+  #14 = Utf8               StackMapTable
+  #15 = Class              #30            // java/lang/String
+  #16 = Utf8               SourceFile
+  #17 = Utf8               ForLoopStringBuilder.java
+  #18 = NameAndType        #8:#9          // "<init>":()V
+  #19 = Utf8               Salut !
+  #20 = Utf8               BootstrapMethods
+  #21 = MethodHandle       6:#31          // REF_invokeStatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+  #22 = String             #32            // \u0001 \u0001
+  #23 = NameAndType        #33:#34        // makeConcatWithConstants:(Ljava/lang/String;I)Ljava/lang/String;
+  #24 = Class              #35            // java/lang/System
+  #25 = NameAndType        #36:#37        // out:Ljava/io/PrintStream;
+  #26 = Class              #38            // java/io/PrintStream
+  #27 = NameAndType        #39:#40        // println:(Ljava/lang/String;)V
+  #28 = Utf8               runtime/string/ForLoopStringBuilder
+  #29 = Utf8               java/lang/Object
+  #30 = Utf8               java/lang/String
+  #31 = Methodref          #41.#42        // java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+  #32 = Utf8               \u0001 \u0001
+  #33 = Utf8               makeConcatWithConstants
+  #34 = Utf8               (Ljava/lang/String;I)Ljava/lang/String;
+  #35 = Utf8               java/lang/System
+  #36 = Utf8               out
+  #37 = Utf8               Ljava/io/PrintStream;
+  #38 = Utf8               java/io/PrintStream
+  #39 = Utf8               println
+  #40 = Utf8               (Ljava/lang/String;)V
+  #41 = Class              #43            // java/lang/invoke/StringConcatFactory
+  #42 = NameAndType        #33:#47        // makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+  #43 = Utf8               java/lang/invoke/StringConcatFactory
+  #44 = Class              #49            // java/lang/invoke/MethodHandles$Lookup
+  #45 = Utf8               Lookup
+  #46 = Utf8               InnerClasses
+  #47 = Utf8               (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+  #48 = Class              #50            // java/lang/invoke/MethodHandles
+  #49 = Utf8               java/lang/invoke/MethodHandles$Lookup
+  #50 = Utf8               java/lang/invoke/MethodHandles
+{
+  public runtime.string.ForLoopStringBuilder();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 3: 0
+
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=3, args_size=1
+         0: ldc           #2                  // String Salut !
+         2: astore_1
+         3: iconst_0
+         4: istore_2
+         5: iload_2
+         6: bipush        10
+         8: if_icmpge     25
+        11: aload_1
+        12: iload_2
+        13: invokedynamic #3,  0              // InvokeDynamic #0:makeConcatWithConstants:(Ljava/lang/String;I)Ljava/lang/String;
+        18: astore_1
+        19: iinc          2, 1
+        22: goto          5
+        25: getstatic     #4                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        28: aload_1
+        29: invokevirtual #5                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        32: return
+      LineNumberTable:
+        line 6: 0
+        line 7: 3
+        line 8: 11
+        line 7: 19
+        line 10: 25
+        line 11: 32
+      StackMapTable: number_of_entries = 2
+        frame_type = 253 /* append */
+          offset_delta = 5
+          locals = [ class java/lang/String, int ]
+        frame_type = 250 /* chop */
+          offset_delta = 19
+}
+SourceFile: "ForLoopStringBuilder.java"
+InnerClasses:
+  public static final #45= #44 of #48;    // Lookup=class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+BootstrapMethods:
+  0: #21 REF_invokeStatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #22 \u0001 \u0001

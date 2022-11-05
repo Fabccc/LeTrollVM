@@ -1,0 +1,140 @@
+Classfile /home/fabien/PPerso/LeTrollVM/runtime/Fibonnaci.class
+  Last modified 31 oct. 2022; size 1035 bytes
+  SHA-256 checksum 0208aac042ff7bc512dac04a98447f0f8ec71253b78d7301c1fc2baa5e6bbc7e
+  Compiled from "Fibonnaci.java"
+public class runtime.Fibonnaci
+  minor version: 0
+  major version: 55
+  flags: (0x0021) ACC_PUBLIC, ACC_SUPER
+  this_class: #6                          // runtime/Fibonnaci
+  super_class: #7                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 2, attributes: 3
+Constant pool:
+   #1 = Methodref          #7.#18         // java/lang/Object."<init>":()V
+   #2 = Fieldref           #19.#20        // java/lang/System.out:Ljava/io/PrintStream;
+   #3 = InvokeDynamic      #0:#24         // #0:makeConcatWithConstants:(II)Ljava/lang/String;
+   #4 = Methodref          #25.#26        // java/io/PrintStream.print:(Ljava/lang/String;)V
+   #5 = InvokeDynamic      #1:#28         // #1:makeConcatWithConstants:(I)Ljava/lang/String;
+   #6 = Class              #29            // runtime/Fibonnaci
+   #7 = Class              #30            // java/lang/Object
+   #8 = Utf8               <init>
+   #9 = Utf8               ()V
+  #10 = Utf8               Code
+  #11 = Utf8               LineNumberTable
+  #12 = Utf8               main
+  #13 = Utf8               ([Ljava/lang/String;)V
+  #14 = Utf8               StackMapTable
+  #15 = Class              #31            // "[Ljava/lang/String;"
+  #16 = Utf8               SourceFile
+  #17 = Utf8               Fibonnaci.java
+  #18 = NameAndType        #8:#9          // "<init>":()V
+  #19 = Class              #32            // java/lang/System
+  #20 = NameAndType        #33:#34        // out:Ljava/io/PrintStream;
+  #21 = Utf8               BootstrapMethods
+  #22 = MethodHandle       6:#35          // REF_invokeStatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+  #23 = String             #36            // \u0001 \u0001
+  #24 = NameAndType        #37:#38        // makeConcatWithConstants:(II)Ljava/lang/String;
+  #25 = Class              #39            // java/io/PrintStream
+  #26 = NameAndType        #40:#41        // print:(Ljava/lang/String;)V
+  #27 = String             #42            //  \u0001
+  #28 = NameAndType        #37:#43        // makeConcatWithConstants:(I)Ljava/lang/String;
+  #29 = Utf8               runtime/Fibonnaci
+  #30 = Utf8               java/lang/Object
+  #31 = Utf8               [Ljava/lang/String;
+  #32 = Utf8               java/lang/System
+  #33 = Utf8               out
+  #34 = Utf8               Ljava/io/PrintStream;
+  #35 = Methodref          #44.#45        // java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+  #36 = Utf8               \u0001 \u0001
+  #37 = Utf8               makeConcatWithConstants
+  #38 = Utf8               (II)Ljava/lang/String;
+  #39 = Utf8               java/io/PrintStream
+  #40 = Utf8               print
+  #41 = Utf8               (Ljava/lang/String;)V
+  #42 = Utf8                \u0001
+  #43 = Utf8               (I)Ljava/lang/String;
+  #44 = Class              #46            // java/lang/invoke/StringConcatFactory
+  #45 = NameAndType        #37:#50        // makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+  #46 = Utf8               java/lang/invoke/StringConcatFactory
+  #47 = Class              #52            // java/lang/invoke/MethodHandles$Lookup
+  #48 = Utf8               Lookup
+  #49 = Utf8               InnerClasses
+  #50 = Utf8               (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+  #51 = Class              #53            // java/lang/invoke/MethodHandles
+  #52 = Utf8               java/lang/invoke/MethodHandles$Lookup
+  #53 = Utf8               java/lang/invoke/MethodHandles
+{
+  public runtime.Fibonnaci();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 3: 0
+
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=3, locals=6, args_size=1
+         0: iconst_0
+         1: istore_1
+         2: iconst_1
+         3: istore_2
+         4: bipush        10
+         6: istore        5
+         8: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        11: iload_1
+        12: iload_2
+        13: invokedynamic #3,  0              // InvokeDynamic #0:makeConcatWithConstants:(II)Ljava/lang/String;
+        18: invokevirtual #4                  // Method java/io/PrintStream.print:(Ljava/lang/String;)V
+        21: iconst_2
+        22: istore        4
+        24: iload         4
+        26: iload         5
+        28: if_icmpge     57
+        31: iload_1
+        32: iload_2
+        33: iadd
+        34: istore_3
+        35: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        38: iload_3
+        39: invokedynamic #5,  0              // InvokeDynamic #1:makeConcatWithConstants:(I)Ljava/lang/String;
+        44: invokevirtual #4                  // Method java/io/PrintStream.print:(Ljava/lang/String;)V
+        47: iload_2
+        48: istore_1
+        49: iload_3
+        50: istore_2
+        51: iinc          4, 1
+        54: goto          24
+        57: return
+      LineNumberTable:
+        line 5: 0
+        line 6: 8
+        line 8: 21
+        line 11: 31
+        line 12: 35
+        line 13: 47
+        line 14: 49
+        line 9: 51
+        line 16: 57
+      StackMapTable: number_of_entries = 2
+        frame_type = 255 /* full_frame */
+          offset_delta = 24
+          locals = [ class "[Ljava/lang/String;", int, int, top, int, int ]
+          stack = []
+        frame_type = 32 /* same */
+}
+SourceFile: "Fibonnaci.java"
+InnerClasses:
+  public static final #48= #47 of #51;    // Lookup=class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+BootstrapMethods:
+  0: #22 REF_invokeStatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #23 \u0001 \u0001
+  1: #22 REF_invokeStatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #27  \u0001

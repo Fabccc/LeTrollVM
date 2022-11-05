@@ -17,7 +17,6 @@ import {
 import NotImplemented from "./errors/NotImplemented"
 import { stringify } from "./Print"
 import Program from "./Program"
-import { getFieldHandle, getMethodHandle } from "./Stubs"
 import { Arguments, Attribute, CodeAttribute, Fieldref, Method } from "./Type"
 
 export function hex(instruction: number) {
@@ -47,6 +46,7 @@ export function executeMethod(
 	classManager: ClassManager,
 	...arg: Arguments[]
 ): any {
+	const { stubs } = classManager
 	const { constantPool, attributes } = klass
 	const codeAttribute = getCodeAttribute(method)
 	const program = new Program(codeAttribute)
@@ -130,7 +130,10 @@ export function executeMethod(
 				const value = program.pop()
 				const fieldref = program.pop() as Fieldref
 				if (betterDescriptor(fieldref.fieldType) == methodRef.klass) {
-					const instance = getFieldHandle(fieldref.klass, fieldref.field)
+					const instance = stubs.getFieldHandle(
+						fieldref.klass,
+						fieldref.field,
+					)
 					if (instance == undefined) {
 						throw new NotImplemented(
 							"Stub instance for " +
@@ -138,7 +141,7 @@ export function executeMethod(
 								" not found",
 						)
 					}
-					const methodHandle = instance[methodRef.methodName]
+					const methodHandle: Function = instance[methodRef.methodName]
 					if (methodHandle == undefined) {
 						throw new NotImplemented(
 							"Stub method " +
@@ -148,7 +151,10 @@ export function executeMethod(
 								" not found",
 						)
 					}
-					methodHandle(methodRef.methodDescriptor, value)
+					// On invoke virtual, an instance of object must be added to arg for javascript to work
+					// properly, as like Java, require an instance of object to make this function work
+					// e.g.: it's not static :))))
+					methodHandle.call(instance, methodRef.methodDescriptor, value)
 				} else {
 					throw new NotImplemented(
 						"invokevirtual Not implemented with " + value + " / " + fieldref,
@@ -490,7 +496,7 @@ export function executeMethod(
 				const value = dynamicMethod(...dynamicArgs.reverse())
 				program.push(value)
 			} else {
-				const method = getMethodHandle(
+				const method = stubs.getMethodHandle(
 					invokeDynamic.bootstrapMethodClass,
 					invokeDynamic.bootstrapMethodName,
 				)
@@ -592,14 +598,13 @@ export function executeMethod(
 			const value2 = program.pop()
 			const value1 = program.pop()
 			//if_icmpge succeeds if and only if value1 ≥ value2
+			const instructionIndex =
+				(branchbyte + programIndex) % program.instructionSize
 			program.log(
-				`#${programIndex} if_icmpge ${
-					(branchbyte + programIndex) % program.instructionSize
-				} : ${value1} >= ${value2}`,
+				`#${programIndex} if_icmpge ${instructionIndex} : ${value1} >= ${value2}`,
 			)
 			if (value1 >= value2) {
-				const location = (branchbyte + programIndex) % program.instructionSize
-				program.cursor(location)
+				program.cursor(instructionIndex)
 			}
 		} else if (instruction == 0xb3) {
 			// put static
@@ -650,9 +655,11 @@ export function executeMethod(
 			//branchbyte2
 			const branchbyte2 = program.readInstruction()
 			const branchbyte = (branchbyte1 << 8) | branchbyte2
-			program.log(
-				`#${programIndex} goto ${branchbyte % program.instructionSize}`,
-			)
+			const instructionIndex = branchbyte % program.instructionSize
+			program.log(`#${programIndex} goto ${instructionIndex}`)
+			console.log(branchbyte)
+			console.log(program.instructionSize)
+			throw new NotImplemented(hex(instruction) + " not implemented")
 			program.cursor(branchbyte)
 		} else if (instruction == 0x0) {
 			// noop

@@ -7,6 +7,10 @@ export default class Program {
 	public localVariableCount: number
 	public debug: boolean = true
 
+	// Instructions offsets
+	public instructionOffset: number
+	public instructionsOffsets: number[]
+
 	// Virtual Invokes
 	public virtualInvokes: any = {}
 
@@ -35,6 +39,13 @@ export default class Program {
 		return this.instruction[this.programCounter++]
 	}
 
+	public readValue(): number {
+		if (!this.hasInstruction()) {
+			throw new Error("Program counter overflow")
+		}
+		return this.instruction[this.programCounter++]
+	}
+
 	public padZero() {
 		const zero = this.readInstruction()
 		if (zero != 0) {
@@ -46,7 +57,7 @@ export default class Program {
 		return this.programCounter < this.endOfProgram
 	}
 
-	public get instructionSize(): number{
+	public get instructionSize(): number {
 		return this.instruction.length
 	}
 
@@ -64,7 +75,7 @@ export default class Program {
 		this.stack.push(variable)
 	}
 	public offset(cursor: number) {
-		const finalValue = cursor + this.programCounter % this.instruction.length
+		const finalValue = cursor + (this.programCounter % this.instruction.length)
 		if (finalValue >= this.instruction.length) {
 			throw new Error(
 				`Program counter overflow (cursor=${finalValue}, instruction_length=${this.instruction.length})`,

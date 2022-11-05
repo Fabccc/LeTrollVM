@@ -1,26 +1,30 @@
 import { existsSync, openSync } from "fs"
 import {
-  listClassAccesors,
-  listFieldAccessors,
-  listMethodAccesors
+	listClassAccesors,
+	listFieldAccessors,
+	listMethodAccesors,
 } from "./Accessors"
 import { readAttributeInfo } from "./Attributes"
 import BufferedReader from "./BufferedReader"
 import Class from "./Class"
 import {
-  readClassInfo,
-  readConstantPool,
-  readNameIndex,
-  readUtf8
+	readClassInfo,
+	readConstantPool,
+	readNameIndex,
+	readUtf8,
 } from "./ConstantPool"
 import { betterDescriptor, betterMethodDescriptor } from "./Descriptors"
 import NotFound from "./errors/NotFound"
 import NotImplemented from "./errors/NotImplemented"
+import { defaultStubClasses, StubClasses } from "./Stubs"
 
 export default class ClassManager {
 	private classes: { [className: string]: Class } = {}
+	public stubs: StubClasses
 
-	constructor() {}
+	constructor(stub?: StubClasses) {
+		this.stubs = stub || defaultStubClasses
+	}
 
 	private load(className: string): Class {
 		const fileName = className + ".class"

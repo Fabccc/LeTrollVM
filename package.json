@@ -1,12 +1,12 @@
 {
-  "name": "letrollvm",
-  "module": "index.ts",
-  "type": "module",
-  "devDependencies": {
-    "bun-types": "^0.1.0"
-  },
-  "scripts": {
-    "exec": "bun index.ts",
-    "buildClass": "cd runtime && javac -sourcepath . */*.java"
-  }
+	"name": "letrollvm",
+	"module": "index.ts",
+	"type": "module",
+	"devDependencies": {
+		"bun-types": "^0.1.0"
+	},
+	"scripts": {
+		"exec": "bun index.ts",
+		"buildClass": "cd runtime && javac -sourcepath . */*.java && cd ../tests && javac -sourcepath . */*.java"
+	}
 }
