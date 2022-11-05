@@ -29,7 +29,6 @@ class TestConsole extends StubClass {
 			if (exp >= 7 || exp <= -4) {
 				this.printlnLines.push(mantisa + "E" + exp)
 			} else {
-				console.log(">= Printlnlines "+num+" to fixed ("+len+")")
 				this.printlnLines.push(num.toFixed(len))
 			}
 		} else if (methodDescriptor == "(J)V") {
