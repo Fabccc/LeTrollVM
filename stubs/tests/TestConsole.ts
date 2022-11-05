@@ -14,16 +14,23 @@ class TestConsole extends StubClass {
 	//@jvm("(Ljava/lang/String;)V")
 	public println(methodDescriptor: string, ...args) {
 		// ugly bullshit
-		if(methodDescriptor == "(Ljava/lang/String;)V"){
+		if (methodDescriptor == "(Ljava/lang/String;)V") {
 			this.printlnLines.push(args[0])
-		}else if(methodDescriptor == "(I)V"){
+		} else if (methodDescriptor == "(I)V") {
 			this.printlnLines.push((args[0] as number).toString())
-		}else{
+		} else if (methodDescriptor == "(D)V") {
+			// if number has no decimal, add a ".0"
+			const num = args[0] as number
+			const dec = num.toString().split(".")[1]
+			const len = dec && dec.length > 1 ? dec.length : 1
+			// print
+			this.printlnLines.push(num.toFixed(len))
+		} else {
 			throw new NotImplemented(
 				"Console test log with descriptor " +
 					methodDescriptor +
 					" is not implemented",
-			)	
+			)
 		}
 	}
 

@@ -7,6 +7,6 @@
 	},
 	"scripts": {
 		"exec": "bun index.ts",
-		"buildClass": "cd runtime && javac -sourcepath . */*.java && cd ../tests && javac -sourcepath . */*.java"
+		"buildClass": "cd runtime && javac -sourcepath . */*.java && cd ../tests/print && javac -sourcepath . */*.java"
 	}
 }
