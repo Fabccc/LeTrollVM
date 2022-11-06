@@ -197,6 +197,10 @@ export function executeMethod(
 			program.log(`#${programIndex} iconst_3`)
 			//iconst_3
 			program.push(3)
+		} else if (instruction == 0x7) {
+			program.log(`#${programIndex} iconst_4`)
+			//iconst_4
+			program.push(4)
 		} else if (instruction == 0x8) {
 			program.log(`#${programIndex} iconst_5`)
 			//iconst_5
@@ -589,6 +593,24 @@ export function executeMethod(
 			if (value <= 0) {
 				program.cursor(branchbyte)
 			}
+		} else if (instruction == 0xa0) {
+			//if_icmpne
+			//branchbyte1
+			const branchbyte1 = program.readInstruction()
+			//branchbyte2
+			const branchbyte2 = program.readInstruction()
+			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			const value2 = program.pop()
+			const value1 = program.pop()
+			//if_icmpge succeeds if and only if value1 ≥ value2
+			const instructionIndex =
+				(branchbyte + programIndex) % program.instructionSize
+			program.log(
+				`#${programIndex} if_icmpge ${instructionIndex} : ${value1} >= ${value2}`,
+			)
+			if (value1 != value2) {
+				program.cursor(instructionIndex)
+			}
 		} else if (instruction == 0xa2) {
 			//if_icmpge
 			//branchbyte1
@@ -605,6 +627,42 @@ export function executeMethod(
 				`#${programIndex} if_icmpge ${instructionIndex} : ${value1} >= ${value2}`,
 			)
 			if (value1 >= value2) {
+				program.cursor(instructionIndex)
+			}
+		} else if (instruction == 0xa3) {
+			//if_icmpgt
+			//branchbyte1
+			const branchbyte1 = program.readInstruction()
+			//branchbyte2
+			const branchbyte2 = program.readInstruction()
+			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			const value2 = program.pop()
+			const value1 = program.pop()
+			//if_icmpge succeeds if and only if value1 ≥ value2
+			const instructionIndex =
+				(branchbyte + programIndex) % program.instructionSize
+			program.log(
+				`#${programIndex} if_icmpge ${instructionIndex} : ${value1} >= ${value2}`,
+			)
+			if (value1 > value2) {
+				program.cursor(instructionIndex)
+			}
+		} else if (instruction == 0xa4) {
+			//if_icmple
+			//branchbyte1
+			const branchbyte1 = program.readInstruction()
+			//branchbyte2
+			const branchbyte2 = program.readInstruction()
+			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			const value2 = program.pop()
+			const value1 = program.pop()
+			//if_icmpge succeeds if and only if value1 ≥ value2
+			const instructionIndex =
+				(branchbyte + programIndex) % program.instructionSize
+			program.log(
+				`#${programIndex} if_icmpge ${instructionIndex} : ${value1} >= ${value2}`,
+			)
+			if (value1 <= value2) {
 				program.cursor(instructionIndex)
 			}
 		} else if (instruction == 0xb3) {
@@ -689,19 +747,19 @@ export function executeMethod(
 			const value1 = program.pop()
 			const value = value1 | value2
 			program.push(value)
-		} else if(instruction == 0x78){
+		} else if (instruction == 0x78) {
 			// ishl int shift left
 			const value2 = program.pop()
 			const value1 = program.pop()
 			const value = value1 << value2
 			program.push(value)
-		} else if(instruction == 0x7a){
+		} else if (instruction == 0x7a) {
 			// ishr int shift right
 			const value2 = program.pop()
 			const value1 = program.pop()
 			const value = value1 >> value2
 			program.push(value)
-		}else {
+		} else {
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}

@@ -1,13 +1,17 @@
 {
-	"name": "letrollvm",
-	"module": "index.ts",
-	"type": "module",
-	"devDependencies": {
-		"bun-types": "^0.1.0"
-	},
-	"scripts": {
-		"exec": "bun index.ts",
-		"buildClass:test": "./build_class.sh",
-		"buildClass": "cd runtime && javac -sourcepath . */*.java && "
-	}
+  "name": "letrollvm",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "^0.1.0"
+  },
+  "scripts": {
+    "exec": "bun index.ts",
+    "buildClass:test": "./build_class.sh",
+    "buildClass": "cd runtime && javac -sourcepath . */*.java && "
+  },
+  "dependencies": {
+    "@types/adm-zip": "^0.5.0",
+    "adm-zip": "^0.5.9"
+  }
 }
