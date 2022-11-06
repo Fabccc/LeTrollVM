@@ -580,7 +580,7 @@ export function executeMethod(
 			// ireturn
 			program.log(`#${programIndex} ireturn `)
 			return program.pop()
-		} else if(instruction == 0x9d){
+		} else if (instruction == 0x9d) {
 			// ifgt
 			const instructionIndex = buildBranchByte12(program, programIndex)
 
@@ -590,7 +590,7 @@ export function executeMethod(
 			if (value > 0) {
 				program.cursor(instructionIndex)
 			}
-		}else if (instruction == 0x9e) {
+		} else if (instruction == 0x9e) {
 			// ifle
 			const instructionIndex = buildBranchByte12(program, programIndex)
 
@@ -735,8 +735,41 @@ export function executeMethod(
 			const value1 = program.pop()
 			const value = value1 >> value2
 			program.push(value)
+		} else if (instruction == 0xaa) {
+			// tableswitch (The Amogus instruction of the JVM)
+			// <0-3 byte pad\>
+			// defaultbyte1
+			const defaultbyte1 = program.skipUntilMultiple4()
+			// defaultbyte2
+			const defaultbyte2 = program.readValue()
+			// defaultbyte3
+			const defaultbyte3 = program.readValue()
+			// defaultbyte4
+			const defaultbyte4 = program.readValue()
+			const defaultbyte =
+				(defaultbyte1 << 24) |
+				(defaultbyte2 << 16) |
+				(defaultbyte3 << 8) |
+				defaultbyte4
+			// jump offsets...
+			const lowbyte = program.read32Bits()
+			const highbyte = program.read32Bits()
+			const index = program.pop()
+			if (index < lowbyte || index > highbyte) {
+				const newInstructionProgram = programIndex + defaultbyte
+				program.cursor(newInstructionProgram)
+			} else {
+				const offset = index - lowbyte
+				const startAt = program.programCounter + 4 * offset
+				const newInstructionProgram =
+					program.read32BitsAt(startAt) + programIndex
+				program.cursor(newInstructionProgram)
+			}
+			// throw new NotImplemented(hex(instruction) + " not implemented")
 		} else {
-			throw new NotImplemented(hex(instruction) + " not implemented")
+			throw new NotImplemented(
+				hex(instruction) + " not implemented (#" + programIndex + ")",
+			)
 		}
 	}
 }
