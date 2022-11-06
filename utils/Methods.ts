@@ -18,6 +18,7 @@ import NotImplemented from "./errors/NotImplemented"
 import { stringify } from "./Print"
 import Program from "./Program"
 import { Arguments, Attribute, CodeAttribute, Fieldref, Method } from "./Type"
+import { unsignedByte, unsignedShort } from "./Utils"
 
 export function hex(instruction: number) {
 	return "0x" + instruction.toString(16)
@@ -50,7 +51,6 @@ export function executeMethod(
 	const { constantPool, attributes } = klass
 	const codeAttribute = getCodeAttribute(method)
 	const program = new Program(codeAttribute)
-	program.debug = false
 
 	// init local variables
 	for (let i = 0; i < arg.length; i++) {
@@ -580,31 +580,32 @@ export function executeMethod(
 			// ireturn
 			program.log(`#${programIndex} ireturn `)
 			return program.pop()
-		} else if (instruction == 0x9e) {
+		} else if(instruction == 0x9d){
+			// ifgt
+			const instructionIndex = buildBranchByte12(program, programIndex)
+
+			program.log(`#${programIndex} ifle ${instructionIndex}`)
+			// if less or equal
+			const value = program.pop()
+			if (value > 0) {
+				program.cursor(instructionIndex)
+			}
+		}else if (instruction == 0x9e) {
 			// ifle
-			program.log(`#${programIndex} ifle `)
-			//branchbyte1
-			const branchbyte1 = program.readInstruction()
-			//branchbyte2
-			const branchbyte2 = program.readInstruction()
-			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			const instructionIndex = buildBranchByte12(program, programIndex)
+
+			program.log(`#${programIndex} ifle ${instructionIndex}`)
 			// if less or equal
 			const value = program.pop()
 			if (value <= 0) {
-				program.cursor(branchbyte)
+				program.cursor(instructionIndex)
 			}
 		} else if (instruction == 0xa0) {
 			//if_icmpne
-			//branchbyte1
-			const branchbyte1 = program.readInstruction()
-			//branchbyte2
-			const branchbyte2 = program.readInstruction()
-			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			const instructionIndex = buildBranchByte12(program, programIndex)
 			const value2 = program.pop()
 			const value1 = program.pop()
 			//if_icmpge succeeds if and only if value1 ≥ value2
-			const instructionIndex =
-				(branchbyte + programIndex) % program.instructionSize
 			program.log(
 				`#${programIndex} if_icmpge ${instructionIndex} : ${value1} >= ${value2}`,
 			)
@@ -613,16 +614,10 @@ export function executeMethod(
 			}
 		} else if (instruction == 0xa2) {
 			//if_icmpge
-			//branchbyte1
-			const branchbyte1 = program.readInstruction()
-			//branchbyte2
-			const branchbyte2 = program.readInstruction()
-			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			const instructionIndex = buildBranchByte12(program, programIndex)
 			const value2 = program.pop()
 			const value1 = program.pop()
 			//if_icmpge succeeds if and only if value1 ≥ value2
-			const instructionIndex =
-				(branchbyte + programIndex) % program.instructionSize
 			program.log(
 				`#${programIndex} if_icmpge ${instructionIndex} : ${value1} >= ${value2}`,
 			)
@@ -631,16 +626,10 @@ export function executeMethod(
 			}
 		} else if (instruction == 0xa3) {
 			//if_icmpgt
-			//branchbyte1
-			const branchbyte1 = program.readInstruction()
-			//branchbyte2
-			const branchbyte2 = program.readInstruction()
-			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			const instructionIndex = buildBranchByte12(program, programIndex)
 			const value2 = program.pop()
 			const value1 = program.pop()
 			//if_icmpge succeeds if and only if value1 ≥ value2
-			const instructionIndex =
-				(branchbyte + programIndex) % program.instructionSize
 			program.log(
 				`#${programIndex} if_icmpge ${instructionIndex} : ${value1} >= ${value2}`,
 			)
@@ -649,16 +638,10 @@ export function executeMethod(
 			}
 		} else if (instruction == 0xa4) {
 			//if_icmple
-			//branchbyte1
-			const branchbyte1 = program.readInstruction()
-			//branchbyte2
-			const branchbyte2 = program.readInstruction()
-			const branchbyte = (branchbyte1 << 8) | branchbyte2
+			const instructionIndex = buildBranchByte12(program, programIndex)
 			const value2 = program.pop()
 			const value1 = program.pop()
 			//if_icmpge succeeds if and only if value1 ≥ value2
-			const instructionIndex =
-				(branchbyte + programIndex) % program.instructionSize
 			program.log(
 				`#${programIndex} if_icmpge ${instructionIndex} : ${value1} >= ${value2}`,
 			)
@@ -705,21 +688,14 @@ export function executeMethod(
 			// index
 			const index = program.readInstruction()
 			// const
-			const value = program.readInstruction()
+			const value = unsignedByte(program.readInstruction())
+			program.log(`#${programIndex} iinc ${index},${value}`)
 			program.variables[index] += value
 		} else if (instruction == 0xa7) {
 			// goto
-			//branchbyte 1
-			const branchbyte1 = program.readInstruction()
-			//branchbyte2
-			const branchbyte2 = program.readInstruction()
-			const branchbyte = (branchbyte1 << 8) | branchbyte2
-			const instructionIndex = branchbyte % program.instructionSize
+			const instructionIndex = buildBranchByte12(program, programIndex)
 			program.log(`#${programIndex} goto ${instructionIndex}`)
-			console.log(branchbyte)
-			console.log(program.instructionSize)
-			throw new NotImplemented(hex(instruction) + " not implemented")
-			program.cursor(branchbyte)
+			program.cursor(instructionIndex)
 		} else if (instruction == 0x0) {
 			// noop
 		} else if (instruction == 0x85) {
@@ -763,4 +739,15 @@ export function executeMethod(
 			throw new NotImplemented(hex(instruction) + " not implemented")
 		}
 	}
+}
+
+function buildBranchByte12(program: Program, programIndex: number): number {
+	//branchbyte1
+	const branchbyte1 = program.readInstruction()
+	//branchbyte2
+	const branchbyte2 = program.readInstruction()
+	const branchbyte = (branchbyte1 << 8) | branchbyte2
+	const offset = unsignedShort(branchbyte)
+	const instructionIndex = programIndex + offset
+	return instructionIndex
 }

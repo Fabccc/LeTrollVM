@@ -168,7 +168,7 @@ export function readAttributeInfo(
 						localsVerifications,
 						stacksVerifications,
 					})
-				} else if (frameType == 253) {
+				} else if (frameType == 253 || frameType == 252) {
 					// 	u2 offset_delta;
 					const offsetDelta = reader.readU2()
 					const numberOfVerifs = frameType - 251
@@ -179,7 +179,7 @@ export function readAttributeInfo(
 						offsetDelta,
 						verifs,
 					})
-				} else if (frameType == 250) {
+				}else if (frameType == 250) {
 					const offsetDelta = reader.readU2()
 					entries.push({
 						frameType,

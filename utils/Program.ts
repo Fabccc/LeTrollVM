@@ -1,11 +1,13 @@
 import { CodeAttribute } from "./Type"
 
 export default class Program {
+
+	private static debug: boolean = false
+
 	private instruction: Uint8Array
 	public programCounter: number = 0
 	public readonly endOfProgram: number
 	public localVariableCount: number
-	public debug: boolean = true
 
 	// Instructions offsets
 	public instructionOffset: number
@@ -69,7 +71,7 @@ export default class Program {
 		if (this.stack.length >= this.maxStackSize) {
 			throw new Error("Stack overflow")
 		}
-		if (this.debug) {
+		if (Program.debug) {
 			// console.error(`(=>) Pushing ${variable}`)
 		}
 		this.stack.push(variable)
@@ -98,13 +100,13 @@ export default class Program {
 		if (this.stack.length == 0) {
 			throw new Error("Stack empty")
 		}
-		if (this.debug) {
+		if (Program.debug) {
 			// console.error(`(<=) Poping ${this.stack[this.stack.length - 1]}`)
 		}
 		return this.stack.pop()
 	}
 
 	public log(val: string) {
-		if (this.debug) console.log(val)
+		if (Program.debug) console.log(val)
 	}
 }

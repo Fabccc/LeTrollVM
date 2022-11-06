@@ -173,3 +173,7 @@ bun.lockb
 
 # I downloaded 624 pages of JVM definition :LeTroll:
 *.pdf
+
+# low level C test (unsigned and all)
+test
+test.c
