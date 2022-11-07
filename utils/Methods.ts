@@ -120,16 +120,23 @@ export function executeMethod(
 			const index2 = program.readInstruction()
 			const constantPoolIndex = (index1 << 8) | index2
 			const methodRef = readMethodrefInfo(constantPool, constantPoolIndex - 1)
+
 			const descriptor = descriptorInfo(methodRef.methodDescriptor)
 
 			program.log(
 				`#${programIndex} invokevirtual "${methodRef.klass}#${methodRef.methodName}${methodRef.methodDescriptor}"`,
 			)
 			// Argument count + the required instance object to execute
-			if (program.stackSize == descriptor.argCount + 1) {
-				const value = program.pop()
-				const fieldref = program.pop() as Fieldref
-				if (betterDescriptor(fieldref.fieldType) == methodRef.klass) {
+			if (program.stackSize >= descriptor.argCount - 1) {
+				const argumentList = []
+				for (let i = 0; i < descriptor.argCount; i++) {
+					argumentList.push(program.pop())
+				}
+				const fieldref = program.pop() as any
+				if (
+					typeof fieldref == "object" &&
+					betterDescriptor(fieldref.fieldType) == methodRef.klass
+				) {
 					const instance = stubs.getFieldHandle(fieldref.klass, fieldref.field)
 					if (instance == undefined) {
 						throw new NotImplemented(
@@ -151,10 +158,29 @@ export function executeMethod(
 					// On invoke virtual, an instance of object must be added to arg for javascript to work
 					// properly, as like Java, require an instance of object to make this function work
 					// e.g.: it's not static :))))
-					methodHandle.call(instance, methodRef.methodDescriptor, value)
+					// methodHandle.call(instance, methodRef.methodDescriptor, value)
+					argumentList.unshift(methodRef.methodDescriptor)
+					const result = methodHandle.call(instance, ...argumentList)
+					if (result != undefined) {
+						program.push(result)
+					}
+				} else if (typeof fieldref == "string") {
+					const instance = stubs.getStubClass("java/lang/String")
+					const methodHandle = stubs.getMethodHandle(
+						"java/lang/String",
+						methodRef.methodName,
+					)
+					argumentList.push(fieldref)
+					const result = methodHandle.call(instance, ...argumentList)
+					if (result != undefined) {
+						program.push(result)
+					}
 				} else {
 					throw new NotImplemented(
-						"invokevirtual Not implemented with " + value + " / " + fieldref,
+						"invokevirtual Not implemented with " +
+							argumentList +
+							" / " +
+							fieldref,
 					)
 				}
 			} else {
@@ -181,6 +207,10 @@ export function executeMethod(
 					cstValue.name + " Not implemented for instruction ldc2_w AKA 0x14",
 				)
 			}
+		} else if (instruction == 0x2) {
+			program.log(`#${programIndex} iconst_m1`)
+			// iconst_m1
+			program.push(-1)
 		} else if (instruction == 0x3) {
 			program.log(`#${programIndex} iconst_0`)
 			// iconst_0
@@ -469,14 +499,27 @@ export function executeMethod(
 		} else if (instruction == 0x4c) {
 			// astore_1
 			const objectref = program.pop()
+			program.log(`#${programIndex} astore_1 `)
 			program.variables[1] = objectref
+		} else if (instruction == 0x4d) {
+			// astore_2
+			const objectref = program.pop()
+			program.log(`#${programIndex} astore_2 `)
+			program.variables[2] = objectref
 		} else if (instruction == 0x2a) {
 			// aload_0
+			program.log(`#${programIndex} aload_0 `)
 			const objectref = program.variables[0]
 			program.push(objectref)
 		} else if (instruction == 0x2b) {
 			// aload_1
+			program.log(`#${programIndex} aload_1 `)
 			const objectref = program.variables[1]
+			program.push(objectref)
+		} else if (instruction == 0x2c) {
+			// aload_1
+			program.log(`#${programIndex} aload_2 `)
+			const objectref = program.variables[2]
 			program.push(objectref)
 		} else if (instruction == 0xba) {
 			// invokedynamic
@@ -580,11 +623,20 @@ export function executeMethod(
 			// ireturn
 			program.log(`#${programIndex} ireturn `)
 			return program.pop()
-		} else if (instruction == 0x9d) {
+		} else if(instruction == 0x99){
+			// ifeq
+			const instructionIndex = buildBranchByte12(program, programIndex)
+			program.log(`#${programIndex} ifeq ${instructionIndex}`)
+			// if less or equal
+			const value = program.pop()
+			if (value == 0) {
+				program.cursor(instructionIndex)
+			}
+		}else if (instruction == 0x9d) {
 			// ifgt
 			const instructionIndex = buildBranchByte12(program, programIndex)
 
-			program.log(`#${programIndex} ifle ${instructionIndex}`)
+			program.log(`#${programIndex} ifgt ${instructionIndex}`)
 			// if less or equal
 			const value = program.pop()
 			if (value > 0) {

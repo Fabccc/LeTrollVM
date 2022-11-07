@@ -8,6 +8,12 @@ public class ForLoopStringBuilder {
       s1 += " "+i;
     }
     System.out.println(s1);
+
+    var s2 = new StringBuilder();
+    for(int i = 0; i < 10; i++){
+      s2.append(" "+i);
+    }
+    System.out.println(s2);
   }
 
 }

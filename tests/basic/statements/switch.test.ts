@@ -23,5 +23,10 @@ test("statement: switch", () => {
   expect(consoleOutput.printlnLines[3]).toBe("John")
   expect(consoleOutput.printlnLines[4]).toBe("Doe")
   expect(consoleOutput.printlnLines[5]).toBe("420")
+  expect(consoleOutput.printlnLines[6]).toBe("none")
+	expect(consoleOutput.printlnLines[7]).toBe("Booz")
+	expect(consoleOutput.printlnLines[8]).toBe("Baz")
+	expect(consoleOutput.printlnLines[9]).toBe("Fuu")
+	expect(consoleOutput.printlnLines[10]).toBe("none")
 	// Program.debug = false
 })

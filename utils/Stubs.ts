@@ -1,3 +1,4 @@
+import { Stringz } from "@stub/String"
 import ConsolePrintStream from "../stubs/ConsolePrintStream"
 import { StringConcatFactory } from "../stubs/StringConcatFactory"
 import { StubClass } from "../stubs/StubClass"
@@ -25,14 +26,14 @@ export class StubClasses {
 		}
 	}
 
-	getMethodHandle(klassName: string, javaClassField: string): Function {
+	getMethodHandle(klassName: string, javaMethod: string): Function {
 		const javaClassName = klassName.replaceAll("/", ".")
 		const klass = this.getStubClass(klassName)
-		if (klass[javaClassField] !== undefined) {
-			return klass[javaClassField]
+		if (klass[javaMethod] !== undefined) {
+			return klass[javaMethod]
 		}
 		throw new NotImplemented(
-			`Field of klass ${javaClassName} is not implemented`,
+			`Method ${javaMethod} of klass ${javaClassName} is not implemented`,
 		)
 	}
 
@@ -49,11 +50,17 @@ export class StubClasses {
 }
 
 export function createNewTestClasses() {
-	return new StubClasses(new TestSystem(), new TestConsole(), new StringConcatFactory())
+	return new StubClasses(
+		new TestSystem(),
+		new TestConsole(),
+		new StringConcatFactory(),
+		new Stringz(),
+	)
 }
 
 export const defaultStubClasses = new StubClasses(
 	new System(),
 	new ConsolePrintStream(),
 	new StringConcatFactory(),
+	new Stringz(),
 )
