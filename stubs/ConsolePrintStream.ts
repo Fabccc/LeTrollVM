@@ -1,3 +1,4 @@
+import { ObjectRef } from "@base/Type"
 import { stdout } from "bun"
 import NotImplemented from "../utils/errors/NotImplemented"
 import { stringify } from "../utils/Print"
@@ -29,6 +30,24 @@ class ConsolePrintStream extends StubClass {
 			console.log(args[0].toString())
 		} else if (methodDescriptor == "(D)V") {
 			console.log(args[0].toString())
+		} else if (methodDescriptor == "(Ljava/lang/Object;)V") {
+			const [objectarg] = args
+			const objectref = objectarg as ObjectRef
+			const [klass, method] = this.classLoader.getSuperMethod(
+				objectref.className,
+				"toString",
+			)
+			if (klass instanceof StubClass) {
+				const stubClass = klass as StubClass
+				const result = (method as Function).call(stubClass, objectref)
+				console.log(result.toString())
+			} else {
+				throw new NotImplemented(
+					"Console test log with descriptor " +
+						methodDescriptor +
+						" is not implemented",
+				)
+			}
 		} else {
 			throw new NotImplemented(
 				"Console log with descriptor " +

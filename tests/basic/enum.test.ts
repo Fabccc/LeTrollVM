@@ -3,7 +3,7 @@ import { createNewTestClasses } from "@base/Stubs"
 import TestSystem from "@stub/tests/TestSystem"
 import { expect, test } from "bun:test"
 
-test("string#hashcode", () => {
+test("enum lookup and methods", () => {
 	const className = "tests/basic/EnumTest"
 	const stubClasses = createNewTestClasses()
 

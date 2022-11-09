@@ -1,23 +1,38 @@
+import { StubClass } from "@stub/StubClass"
 import Class from "./Class"
 import ClassManager from "./ClassLoader"
 import {
 	ConstantPool,
+	readClassInfo,
 	readFieldrefInfo,
 	readFloat,
 	readInteger,
 	readInvokeDynamic,
 	readMethodrefInfo,
 	readString,
+	readUtf8,
 } from "./ConstantPool"
 import {
 	betterDescriptor,
 	betterMethodDescriptor,
 	descriptorInfo,
+	type,
 } from "./Descriptors"
 import NotImplemented from "./errors/NotImplemented"
 import { stringify } from "./Print"
 import Program from "./Program"
-import { Arguments, Attribute, CodeAttribute, Fieldref, Method } from "./Type"
+import {
+	Arguments,
+	ArrayRef,
+	Attribute,
+	CodeAttribute,
+	Fieldref,
+	Method,
+	MethodData,
+	ObjectEnumRef,
+	ObjectRef,
+	StubObjectRef,
+} from "./Type"
 import { unsignedByte, unsignedShort } from "./Utils"
 
 export function hex(instruction: number) {
@@ -51,11 +66,20 @@ export function executeMethod(
 	const { constantPool, attributes } = klass
 	const codeAttribute = getCodeAttribute(method)
 	const program = new Program(codeAttribute)
+	if (program.localVariableCount < arg.length) {
+		throw new Error("Passed more argument than programLocalVariablesCount")
+	}
 
 	// init local variables
 	for (let i = 0; i < arg.length; i++) {
 		const { type, value } = arg[i]
 		if (type == "int") {
+			program.variables[i] = value
+		} else if (type == "java/lang/String") {
+			program.variables[i] = value
+		} else if (type == "double") {
+			program.variables[i] = value
+		} else if (type == "objectref") {
 			program.variables[i] = value
 		} else {
 			throw new NotImplemented(
@@ -82,15 +106,32 @@ export function executeMethod(
 			const index2 = program.readInstruction()
 			const constantPoolIndex = (index1 << 8) | index2
 			const ref = readFieldrefInfo(constantPool, constantPoolIndex - 1)
+			const fType = type(ref.fieldType)
 			program.log(
 				`#${programIndex} getstatic ${ref.klass}.${
 					ref.field
 				} => ${betterDescriptor(ref.fieldType)}`,
 			)
-			if (ref.klass == klass.name) {
+			if (classManager.exist(ref.klass)) {
+				const klass = classManager.get(ref.klass)
 				program.push(klass.staticFields[ref.field])
 			} else {
-				program.push(ref)
+				// program.push(ref)
+				const fieldHandle = classManager.stubs.getFieldHandle(
+					ref.klass,
+					ref.field,
+				)
+				if (fType == "object") {
+					const stubClass = fieldHandle as StubClass
+					const stubClassRef = new StubObjectRef(
+						stubClass.javaClassName,
+						{},
+						stubClass,
+					)
+					program.push(stubClassRef)
+				} else {
+					throw new NotImplemented(`Stub class field (${fType})`)
+				}
 			}
 		} else if (instruction == 0x12) {
 			// ldc
@@ -132,45 +173,69 @@ export function executeMethod(
 				for (let i = 0; i < descriptor.argCount; i++) {
 					argumentList.push(program.pop())
 				}
-				const fieldref = program.pop() as any
-				if (
-					typeof fieldref == "object" &&
-					betterDescriptor(fieldref.fieldType) == methodRef.klass
-				) {
-					const instance = stubs.getFieldHandle(fieldref.klass, fieldref.field)
-					if (instance == undefined) {
-						throw new NotImplemented(
-							"Stub instance for " +
-								JSON.stringify(fieldref, null, 1) +
-								" not found",
+				const objectref = program.pop() as ObjectRef
+				if (objectref == null) {
+					throw new Error("NullPointerException")
+				}
+				if (typeof objectref == "object") {
+					if (stubs.exist(objectref.className)) {
+						const instance = (objectref as StubObjectRef).stubClass
+						if (instance == undefined) {
+							throw new NotImplemented(
+								"Stub instance for " +
+									JSON.stringify(objectref, null, 1) +
+									" not found",
+							)
+						}
+						const methodHandle: Function = instance[methodRef.methodName]
+						if (methodHandle == undefined) {
+							throw new NotImplemented(
+								"Stub method " +
+									methodRef.methodName +
+									" for " +
+									JSON.stringify(instance.javaClassName, null, 1) +
+									" not found",
+							)
+						}
+						// On invoke virtual, an instance of object must be added to arg for javascript to work
+						// properly, as like Java, require an instance of object to make this function work
+						// e.g.: it's not static :))))
+						// methodHandle.call(instance, methodRef.methodDescriptor, value)
+						argumentList.unshift(methodRef.methodDescriptor)
+						const result = methodHandle.call(instance, ...argumentList)
+						if (result != undefined) {
+							program.push(result)
+						}
+					} else {
+						const [klass, method] = classManager.getSuperMethod(
+							methodRef.klass,
+							methodRef.methodName,
 						)
+						if (klass instanceof Class) {
+							// Current runtime class
+							throw new NotImplemented(
+								"#invokevirtual : Fetch super class for method not implemented (runtime classes)",
+							)
+						} else {
+							// Typescript implementation
+							const [stubClass, methodHandle] = [
+								klass as StubClass,
+								method as Function,
+							]
+							argumentList.unshift(objectref)
+							const result = methodHandle.call(stubClass, ...argumentList)
+							if (result != undefined) {
+								program.push(result)
+							}
+						}
 					}
-					const methodHandle: Function = instance[methodRef.methodName]
-					if (methodHandle == undefined) {
-						throw new NotImplemented(
-							"Stub method " +
-								methodRef.methodName +
-								" for " +
-								JSON.stringify(fieldref, null, 1) +
-								" not found",
-						)
-					}
-					// On invoke virtual, an instance of object must be added to arg for javascript to work
-					// properly, as like Java, require an instance of object to make this function work
-					// e.g.: it's not static :))))
-					// methodHandle.call(instance, methodRef.methodDescriptor, value)
-					argumentList.unshift(methodRef.methodDescriptor)
-					const result = methodHandle.call(instance, ...argumentList)
-					if (result != undefined) {
-						program.push(result)
-					}
-				} else if (typeof fieldref == "string") {
+				} else if (typeof objectref == "string") {
 					const instance = stubs.getStubClass("java/lang/String")
 					const methodHandle = stubs.getMethodHandle(
 						"java/lang/String",
 						methodRef.methodName,
 					)
-					argumentList.push(fieldref)
+					argumentList.push(objectref)
 					const result = methodHandle.call(instance, ...argumentList)
 					if (result != undefined) {
 						program.push(result)
@@ -180,7 +245,7 @@ export function executeMethod(
 						"invokevirtual Not implemented with " +
 							argumentList +
 							" / " +
-							fieldref,
+							objectref,
 					)
 				}
 			} else {
@@ -498,28 +563,28 @@ export function executeMethod(
 			program.push(value)
 		} else if (instruction == 0x4c) {
 			// astore_1
-			const objectref = program.pop()
+			const objectref = program.pop() as ObjectRef
 			program.log(`#${programIndex} astore_1 `)
 			program.variables[1] = objectref
 		} else if (instruction == 0x4d) {
 			// astore_2
-			const objectref = program.pop()
+			const objectref = program.pop() as ObjectRef
 			program.log(`#${programIndex} astore_2 `)
 			program.variables[2] = objectref
 		} else if (instruction == 0x2a) {
 			// aload_0
 			program.log(`#${programIndex} aload_0 `)
-			const objectref = program.variables[0]
+			const objectref = program.variables[0] as ObjectRef
 			program.push(objectref)
 		} else if (instruction == 0x2b) {
 			// aload_1
 			program.log(`#${programIndex} aload_1 `)
-			const objectref = program.variables[1]
+			const objectref = program.variables[1] as ObjectRef
 			program.push(objectref)
 		} else if (instruction == 0x2c) {
 			// aload_1
 			program.log(`#${programIndex} aload_2 `)
-			const objectref = program.variables[2]
+			const objectref = program.variables[2] as ObjectRef
 			program.push(objectref)
 		} else if (instruction == 0xba) {
 			// invokedynamic
@@ -536,6 +601,7 @@ export function executeMethod(
 			// fast lookup
 			const lookupName =
 				invokeDynamic.dynamicName + "|" + invokeDynamic.dynamicDescriptor
+			program.log(`#${programIndex} invokedyanmic ${lookupName}`)
 			if (program.virtualInvokes[lookupName]) {
 				const dynamicMethod = program.virtualInvokes[lookupName]
 				const dynamicArgs = []
@@ -567,7 +633,9 @@ export function executeMethod(
 				for (let i = 0; i < invokeDynamic.dynamicParametersCount; i++)
 					dynamicArgs.push(program.pop())
 				const value = dynamicMethod(...dynamicArgs.reverse())
-				program.push(value)
+				if(value != undefined){
+					program.push(value)
+				}
 			}
 		} else if (instruction == 0x3a) {
 			// astore
@@ -600,6 +668,9 @@ export function executeMethod(
 			const methodDesc = descriptorInfo(methodRef.methodDescriptor)
 			const classRef = classManager.get(methodRef.klass)
 			if (program.stackSize >= methodDesc.argCount) {
+				program.log(
+					`#${programIndex} invokedyanmic ${methodRef.methodName}#${methodDesc.asString}`,
+				)
 				let args: Arguments[] = []
 				for (let i = 0; i < methodDesc.argCount; i++) {
 					const { type } = methodDesc.argType[i]
@@ -613,7 +684,9 @@ export function executeMethod(
 					classManager,
 					...args.reverse(),
 				)
-				program.push(result)
+				if (result != undefined) {
+					program.push(result)
+				}
 			} else {
 				throw new NotImplemented(
 					`Invalid stack size (stacksize=${program.stackSize}, methodArgCount=${methodDesc.argCount})`,
@@ -623,7 +696,7 @@ export function executeMethod(
 			// ireturn
 			program.log(`#${programIndex} ireturn `)
 			return program.pop()
-		} else if(instruction == 0x99){
+		} else if (instruction == 0x99) {
 			// ifeq
 			const instructionIndex = buildBranchByte12(program, programIndex)
 			program.log(`#${programIndex} ifeq ${instructionIndex}`)
@@ -632,7 +705,7 @@ export function executeMethod(
 			if (value == 0) {
 				program.cursor(instructionIndex)
 			}
-		}else if (instruction == 0x9d) {
+		} else if (instruction == 0x9d) {
 			// ifgt
 			const instructionIndex = buildBranchByte12(program, programIndex)
 
@@ -702,7 +775,6 @@ export function executeMethod(
 			}
 		} else if (instruction == 0xb3) {
 			// put static
-			program.log(`#${programIndex} putstatic `)
 			//indexbyte1
 			const indexbyte1 = program.readInstruction()
 			//indexbyte2
@@ -728,12 +800,37 @@ export function executeMethod(
 			const ref = readMethodrefInfo(constantPool, constantPoolIndex - 1)
 			program.log(`#${programIndex} invokespecial ${stringify(ref, 0)}`)
 			if (ref.klass == "java/lang/Object" && ref.methodName == "<init>") {
-			} else {
-				throw new NotImplemented(
-					hex(instruction) +
-						" not implemented for special " +
-						stringify(ref, 0),
+			} else if (classManager.stubs.exist(ref.klass)) {
+				// Class has a stub class inside
+				let lookupName = ref.methodName
+				if (lookupName == "<init>") {
+					lookupName = "__init__"
+				} else if (lookupName == "<clinit>") {
+					lookupName = "__clinit__"
+				}
+				const lookupClass = classManager.stubs.getStubClass(ref.klass)
+				const methodHandle = classManager.stubs.getMethodHandle(
+					ref.klass,
+					lookupName,
 				)
+				const methodData = descriptorInfo(ref.methodDescriptor)
+				const argumentList = popArguments(program, methodData)
+				argumentList.unshift({ type: "objectref", value: program.stack[0] })
+				argumentList.unshift({ type: "class", value: klass })
+				methodHandle.call(lookupClass, ...argumentList)
+			} else {
+				const klass = classManager.get(ref.klass)
+				const method = klass.getMethod(ref.methodName)
+				const methodData = descriptorInfo(method.methodDescriptor)
+				const argumentList = popArguments(program, methodData)
+
+				// let objectref: ObjectRef = {
+				// 	className: ref.klass,
+				// 	fields: {},
+				// }
+				const objectref = program.pop()
+				argumentList.unshift({ type: "objectref", value: objectref })
+				klass.executeMethod(ref.methodName, classManager, ...argumentList)
 			}
 		} else if (instruction == 0x84) {
 			// iinc
@@ -818,12 +915,132 @@ export function executeMethod(
 				program.cursor(newInstructionProgram)
 			}
 			// throw new NotImplemented(hex(instruction) + " not implemented")
+		} else if (instruction == 0xb4) {
+			// getfield
+			//indexbyte1
+			const indexbyte1 = program.readInstruction()
+			//indexbyte2
+			const indexbyte2 = program.readInstruction()
+			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
+			const fieldRef = readFieldrefInfo(constantPool, constantPoolIndex - 1)
+			const classRef = classManager.get(fieldRef.klass)
+			const objectref = program.pop() as ObjectRef
+
+			if (classRef.enum) {
+				const enumCtxRef = objectref as any
+				const enumRef = classRef.staticFields[enumCtxRef.field] as ObjectEnumRef
+				program.push(objectref.fields[fieldRef.field])
+			} else {
+				throw new NotImplemented(
+					hex(instruction) +
+						" (getfield) not implemented (#" +
+						programIndex +
+						")",
+				)
+			}
+		} else if (instruction == 0xbb) {
+			// new
+			//indexbyte1
+			const indexbyte1 = program.readInstruction()
+			//indexbyte2
+			const indexbyte2 = program.readInstruction()
+			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
+			const className = readUtf8(constantPool, constantPoolIndex)
+			const instanceFields = Object.values(
+				classManager.get(className).fieldData,
+			).filter((f) => !f.flags.includes("STATIC"))
+			const fieldsValues: { [key: string]: any } = {}
+			for (const field of instanceFields) {
+				if (field.type == "java/lang/String") {
+					fieldsValues[field.name] = null
+				} else if (field.type == "int") {
+					fieldsValues[field.name] = 0
+				} else if (field.type == "double") {
+					fieldsValues[field.name] = 0.0
+				} else {
+					throw new NotImplemented(
+						`Field initializion not implemented for field of type ${field.type}`,
+					)
+				}
+			}
+			const objectref: ObjectRef = {
+				className: className,
+				fields: fieldsValues,
+			}
+			program.push(objectref)
+		} else if (instruction == 0x59) {
+			// dup
+			const val = program.pop()
+			program.push(val)
+			program.push(val)
+		} else if (instruction == 0xb5) {
+			// putfield
+			//indexbyte1
+			const indexbyte1 = program.readInstruction()
+			//indexbyte2
+			const indexbyte2 = program.readInstruction()
+			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
+			const value = program.pop()
+			const objectref = program.pop() as ObjectRef
+			const fieldRef = readFieldrefInfo(constantPool, constantPoolIndex - 1)
+			checkRef(classManager, objectref, fieldRef)
+			objectref.fields[fieldRef.field] = value
+		} else if (instruction == 0xbd) {
+			// anewarray
+			//indexbyte1
+			const indexbyte1 = program.readInstruction()
+			//indexbyte2
+			const indexbyte2 = program.readInstruction()
+			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
+			const classInfo = readClassInfo(constantPool, constantPoolIndex - 1)
+			classManager.get(classInfo) // load class
+			const count = program.pop()
+			const arrayRef = new ArrayRef(classInfo, count, [])
+			program.push(arrayRef)
+		} else if (instruction == 0x53) {
+			// aastore
+			const value = program.pop()
+			const index = program.pop()
+			const arrayRef = program.pop() as ArrayRef
+			arrayRef.data[index] = value
+		} else if (instruction == 0xb0) {
+			// areturn
+			const ref = program.pop()
+			return ref
 		} else {
 			throw new NotImplemented(
 				hex(instruction) + " not implemented (#" + programIndex + ")",
 			)
 		}
 	}
+}
+
+function checkRef(
+	classManager: ClassManager,
+	objectref: ObjectRef,
+	fieldref: Fieldref,
+) {
+	const klass = objectref.className
+	const fieldName = fieldref.field
+	const fieldData = classManager.get(klass).fieldData[fieldName]
+	if (fieldData.name != fieldName) {
+		throw new Error("Field name validation failed")
+	}
+	if (fieldData.descriptor != fieldref.fieldType) {
+		throw new Error("Field type validation failed")
+	}
+}
+
+function popArguments(program: Program, methodData: MethodData): Arguments[] {
+	const argumentList: Arguments[] = []
+	for (let i = 0; i < methodData.argCount; i++) {
+		argumentList.push({
+			type: methodData.argType[methodData.argCount - 1 - i].type,
+			value: program.pop(),
+		})
+	}
+	argumentList.reverse()
+	return argumentList
 }
 
 function buildBranchByte12(program: Program, programIndex: number): number {

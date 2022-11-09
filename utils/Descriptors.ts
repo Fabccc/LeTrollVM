@@ -13,6 +13,35 @@
 import NotImplemented from "./errors/NotImplemented"
 import { MethodArgument, MethodData } from "./Type"
 
+export type JType =
+	| "boolean"
+	| "byte"
+	| "short"
+	| "int"
+	| "char"
+	| "float"
+	| "long"
+	| "double"
+	| "object"
+	| "void"
+
+export function type(desc: string): JType {
+	const firstChar = desc[0]
+	if (firstChar == "I") {
+		return "int"
+	} else if (firstChar == "V") {
+		return "void"
+	} else if (firstChar == "[") {
+		return "object"
+	} else if (firstChar == "L") {
+		return "object"
+	} else if (firstChar == "D") {
+		return "double"
+	} else {
+		throw new NotImplemented(firstChar + " not implemented")
+	}
+}
+
 export function betterDescriptor(desc: string): string {
 	const firstChar = desc[0]
 	if (firstChar == "I") {
@@ -24,6 +53,8 @@ export function betterDescriptor(desc: string): string {
 	} else if (firstChar == "L") {
 		let endClassName = desc.indexOf(";")
 		return desc.substring(1, endClassName)
+	} else if (firstChar == "D") {
+		return "double"
 	} else {
 		throw new NotImplemented(firstChar + " not implemented")
 	}
@@ -60,11 +91,11 @@ export function descriptorInfo(desc: string): MethodData {
 			arg += "char"
 		} else if (charAt == "Z") {
 			arg += "boolean"
-		} else if(charAt == "B"){
+		} else if (charAt == "B") {
 			arg += "byte"
-		} else if(charAt == "S"){
+		} else if (charAt == "S") {
 			arg += "short"
-		}else {
+		} else {
 			throw new NotImplemented("Descriptor for " + charAt + " not implemetend")
 		}
 		if (setArrayLevel) {

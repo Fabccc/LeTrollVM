@@ -1,3 +1,4 @@
+import { ObjectRef } from "@base/Type"
 import { scientificNotation } from "@base/Utils"
 import NotImplemented from "../../utils/errors/NotImplemented"
 import { StubClass } from "../StubClass"
@@ -13,7 +14,7 @@ class TestConsole extends StubClass {
 	// What I want in the future
 	// BunJS doesn't implement decorator YET :YEPP:
 	//@jvm("(Ljava/lang/String;)V")
-	public println(methodDescriptor: string, ...args) {
+	public println(methodDescriptor: string,  ...args) {
 		// ugly bullshit
 		if (methodDescriptor == "(Ljava/lang/String;)V") {
 			this.printlnLines.push(args[0])
@@ -33,7 +34,23 @@ class TestConsole extends StubClass {
 			}
 		} else if (methodDescriptor == "(J)V") {
 			this.printlnLines.push((args[0] as number).toString())
-		} else {
+		} else if(methodDescriptor == "(Ljava/lang/Object;)V"){
+			const [objectarg, ] = args
+			const objectref = objectarg as ObjectRef
+			const [klass, method] = this.classLoader.getSuperMethod(objectref.className, "toString")
+			if(klass instanceof StubClass){
+				const stubClass = klass as StubClass
+				const result = (method as Function).call(stubClass, objectref)
+				this.printlnLines.push(result.toString())
+			}else{
+				throw new NotImplemented(
+					"Console test log with descriptor " +
+						methodDescriptor +
+						" is not implemented",
+				)
+	
+			}
+		}else {
 			throw new NotImplemented(
 				"Console test log with descriptor " +
 					methodDescriptor +

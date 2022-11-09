@@ -1,3 +1,5 @@
+import { StubClass } from "@stub/StubClass"
+
 export interface Fieldref {
 	klass: string
 	field: string
@@ -40,10 +42,46 @@ export interface InvokeDynamic {
 	dynamicParametersCount: number
 }
 
+export interface ObjectRef {
+	className: string
+	fields: { [key: string]: any }
+}
+
+export class StubObjectRef implements ObjectRef {
+	className: string
+	fields: { [key: string]: any }
+	stubClass: StubClass
+
+	constructor(className: string, fields: { [key: string]: any }, stubClass: StubClass) {
+		this.className = className
+		this.fields = fields
+		this.stubClass = stubClass
+	}
+}
+
+export class ArrayRef implements ObjectRef {
+	className: string
+	data: any[]
+	fields: { [key: string]: any }
+
+	constructor(className: string, size: number, data: any[]) {
+		this.className = className
+		this.fields = {}
+		this.data = data
+		this.fields["length"] = size
+	}
+}
+
+export interface ObjectEnumRef extends ObjectRef {
+	name: string
+	ordinal: number
+}
+
 export interface Method {
 	methodName: string
 	accessorsFlags: string[]
 	methodSignature: string
+	methodDescriptor: string
 	attributes: Attribute[]
 }
 
@@ -82,12 +120,12 @@ export interface InnerClasses {
 	innerClassAccessFlags: number
 }
 
-export interface StackMapTable extends Attribute{
+export interface StackMapTable extends Attribute {
 	name: "StackMapTable"
 	entries: StackMapEntries[]
 }
 
-export interface StackMapEntries{
+export interface StackMapEntries {
 	offsetDelta: number
 }
 

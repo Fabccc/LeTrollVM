@@ -1,5 +1,10 @@
 import BufferedReader from "./BufferedReader"
-import { ConstantPool, readClassInfo, readNameIndex } from "./ConstantPool"
+import {
+	ConstantPool,
+	readClassInfo,
+	readNameIndex,
+	readUtf8,
+} from "./ConstantPool"
 import NotImplemented from "./errors/NotImplemented"
 import { Attribute } from "./Type"
 
@@ -192,6 +197,30 @@ export function readAttributeInfo(
 				}
 			}
 			attributes.push({ name, entries })
+		} else if (name == "NestMembers") {
+			//u2 number_of_classes;
+			const numberOfClasses = reader.readU2()
+			const classes = []
+			// u2 classes[number_of_classes];
+			for (let i = 0; i < numberOfClasses; i++) {
+				const nestClassInfoIndex = reader.readU2()
+				const nestClassInfo = readClassInfo(
+					constantPool,
+					nestClassInfoIndex - 1,
+				)
+				classes.push({ nestClassInfoIndex, nestClassInfo })
+			}
+			attributes.push({ name, classes })
+		} else if (name == "Signature") {
+			// u2 signature_index;
+			const signatureIndex = reader.readU2()
+			const signatureValue = readUtf8(constantPool, signatureIndex - 1)
+			attributes.push({ name, signatureIndex, signatureValue })
+		} else if (name == "NestHost") {
+			// u2 host_class_index;
+			const nestHostInfoIndex = reader.readU2()
+			const nestHostInfo = readClassInfo(constantPool, nestHostInfoIndex - 1)
+			attributes.push({ name, nestHostInfoIndex, nestHostInfo })
 		} else {
 			throw new NotImplemented("Attribute: reading undefined for " + name)
 		}
