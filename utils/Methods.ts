@@ -715,7 +715,17 @@ export function executeMethod(
 			if (value > 0) {
 				program.cursor(instructionIndex)
 			}
-		} else if (instruction == 0x9e) {
+		} else if(instruction == 0x9c){
+			// ifge
+			const instructionIndex = buildBranchByte12(program, programIndex)
+
+			program.log(`#${programIndex} ifge ${instructionIndex}`)
+			// if less or equal
+			const value = program.pop()
+			if (value >= 0) {
+				program.cursor(instructionIndex)
+			}
+		}else if (instruction == 0x9e) {
 			// ifle
 			const instructionIndex = buildBranchByte12(program, programIndex)
 
@@ -1007,7 +1017,41 @@ export function executeMethod(
 			// areturn
 			const ref = program.pop()
 			return ref
-		} else {
+		} else if(instruction  == 0x9){
+			// lconst_0
+			program.push(0n)
+		} else if(instruction == 0xa){
+			// lconst_1
+			program.push(1n)
+		}else if(instruction == 0x41){
+			// lstore_2
+			// Both <n> and <n>+1 must be indices into the local variable array of the current frame (§2.6). 
+			// The value on the top of the operand stack must be of type long. 
+			// It is popped from the operand stack, 
+			// and the local variables at <n> and <n>+1 are set to value. 
+			const value = program.pop()
+			program.variables[2] = value
+			program.variables[3] = value
+
+		} else if(instruction == 0x20){
+			// lload_2
+			program.push(program.variables[2])
+		} else if(instruction == 0x94){
+			// lcmp
+			const value2 = program.pop()
+			const value1 = program.pop()
+			if(value1 > value2){
+				program.push(1)
+			}else if(value1 < value2){
+				program.push(-1)
+			}else{
+				program.push(0)
+			}
+		} else if(instruction == 0xac){
+			// ireturn
+			const val = program.pop()
+			return val;
+		}else {
 			throw new NotImplemented(
 				hex(instruction) + " not implemented (#" + programIndex + ")",
 			)

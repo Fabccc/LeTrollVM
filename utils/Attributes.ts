@@ -264,6 +264,8 @@ export function readVerifications(
 			// 		u1 tag = ITEM_Top; /* 0 */
 			// }
 			localsVerifications.push("top")
+		} else if (tag == 4) {
+			localsVerifications.push("int")
 		} else {
 			throw new NotImplemented(
 				`Attribute: vertification type locals ${tag} is not implemented`,
