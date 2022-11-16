@@ -124,7 +124,8 @@ export default class Program {
 
 	public push(variable: any) {
 		if (this.stack.length >= this.maxStackSize) {
-			throw new Error("Stack overflow")
+			console.log(this.stack)
+			throw new Error(`Stack overflow (maxStackSize=${this.maxStackSize})`)
 		}
 		if (Program.debug) {
 			// console.error(`(=>) Pushing ${variable}`)

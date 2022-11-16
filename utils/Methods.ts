@@ -81,6 +81,9 @@ export function executeMethod(
 			program.variables[i] = value
 		} else if (type == "objectref") {
 			program.variables[i] = value
+		} else if (type == "unknown") {
+			// LeTroll
+			program.variables[i] = value
 		} else {
 			throw new NotImplemented(
 				`Argument ${type} transfert into local variable not implemented`,
@@ -169,9 +172,9 @@ export function executeMethod(
 			)
 			// Argument count + the required instance object to execute
 			if (program.stackSize >= descriptor.argCount - 1) {
-				const argumentList = []
+				const argumentList: Arguments[] = []
 				for (let i = 0; i < descriptor.argCount; i++) {
-					argumentList.push(program.pop())
+					argumentList.push({ type: "unknown", value: program.pop() })
 				}
 				const objectref = program.pop() as ObjectRef
 				if (objectref == null) {
@@ -201,7 +204,10 @@ export function executeMethod(
 						// properly, as like Java, require an instance of object to make this function work
 						// e.g.: it's not static :))))
 						// methodHandle.call(instance, methodRef.methodDescriptor, value)
-						argumentList.unshift(methodRef.methodDescriptor)
+						argumentList.unshift({
+							type: "descriptor",
+							value: methodRef.methodDescriptor,
+						})
 						const result = methodHandle.call(instance, ...argumentList)
 						if (result != undefined) {
 							program.push(result)
@@ -212,17 +218,29 @@ export function executeMethod(
 							methodRef.methodName,
 						)
 						if (klass instanceof Class) {
-							// Current runtime class
-							throw new NotImplemented(
-								"#invokevirtual : Fetch super class for method not implemented (runtime classes)",
+							const [runtimeClass, methodRef] = [
+								klass as Class,
+								method as Method,
+							]
+							argumentList.unshift({
+								type: "objectref",
+								value: objectref,
+							})
+							const value = runtimeClass.executeMethod(
+								methodRef.methodName,
+								classManager,
+								...argumentList,
 							)
+							if (value != undefined) {
+								program.push(value)
+							}
 						} else {
 							// Typescript implementation
 							const [stubClass, methodHandle] = [
 								klass as StubClass,
 								method as Function,
 							]
-							argumentList.unshift(objectref)
+							argumentList.unshift({ type: "objectref", value: objectref })
 							const result = methodHandle.call(stubClass, ...argumentList)
 							if (result != undefined) {
 								program.push(result)
@@ -235,7 +253,7 @@ export function executeMethod(
 						"java/lang/String",
 						methodRef.methodName,
 					)
-					argumentList.push(objectref)
+					argumentList.push({ type: "string", value: objectref })
 					const result = methodHandle.call(instance, ...argumentList)
 					if (result != undefined) {
 						program.push(result)
@@ -601,7 +619,7 @@ export function executeMethod(
 			// fast lookup
 			const lookupName =
 				invokeDynamic.dynamicName + "|" + invokeDynamic.dynamicDescriptor
-			program.log(`#${programIndex} invokedyanmic ${lookupName}`)
+			program.log(`#${programIndex} invokedynamic ${lookupName}`)
 			if (program.virtualInvokes[lookupName]) {
 				const dynamicMethod = program.virtualInvokes[lookupName]
 				const dynamicArgs = []
@@ -633,7 +651,7 @@ export function executeMethod(
 				for (let i = 0; i < invokeDynamic.dynamicParametersCount; i++)
 					dynamicArgs.push(program.pop())
 				const value = dynamicMethod(...dynamicArgs.reverse())
-				if(value != undefined){
+				if (value != undefined) {
 					program.push(value)
 				}
 			}
@@ -715,7 +733,7 @@ export function executeMethod(
 			if (value > 0) {
 				program.cursor(instructionIndex)
 			}
-		} else if(instruction == 0x9c){
+		} else if (instruction == 0x9c) {
 			// ifge
 			const instructionIndex = buildBranchByte12(program, programIndex)
 
@@ -725,7 +743,7 @@ export function executeMethod(
 			if (value >= 0) {
 				program.cursor(instructionIndex)
 			}
-		}else if (instruction == 0x9e) {
+		} else if (instruction == 0x9e) {
 			// ifle
 			const instructionIndex = buildBranchByte12(program, programIndex)
 
@@ -810,6 +828,7 @@ export function executeMethod(
 			const ref = readMethodrefInfo(constantPool, constantPoolIndex - 1)
 			program.log(`#${programIndex} invokespecial ${stringify(ref, 0)}`)
 			if (ref.klass == "java/lang/Object" && ref.methodName == "<init>") {
+				program.pop()
 			} else if (classManager.stubs.exist(ref.klass)) {
 				// Class has a stub class inside
 				let lookupName = ref.methodName
@@ -935,18 +954,22 @@ export function executeMethod(
 			const fieldRef = readFieldrefInfo(constantPool, constantPoolIndex - 1)
 			const classRef = classManager.get(fieldRef.klass)
 			const objectref = program.pop() as ObjectRef
+			program.log(
+				`#${programIndex} getfield ${fieldRef.field}:${fieldRef.fieldType}`,
+			)
 
 			if (classRef.enum) {
 				const enumCtxRef = objectref as any
 				const enumRef = classRef.staticFields[enumCtxRef.field] as ObjectEnumRef
 				program.push(objectref.fields[fieldRef.field])
 			} else {
-				throw new NotImplemented(
-					hex(instruction) +
-						" (getfield) not implemented (#" +
-						programIndex +
-						")",
-				)
+				program.push(objectref.fields[fieldRef.field])
+				// throw new NotImplemented(
+				// 	hex(instruction) +
+				// 		" (getfield) not implemented (#" +
+				// 		programIndex +
+				// 		")",
+				// )
 			}
 		} else if (instruction == 0xbb) {
 			// new
@@ -956,6 +979,7 @@ export function executeMethod(
 			const indexbyte2 = program.readInstruction()
 			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
 			const className = readUtf8(constantPool, constantPoolIndex)
+			program.log(`#${programIndex} new ${className}`)
 			const instanceFields = Object.values(
 				classManager.get(className).fieldData,
 			).filter((f) => !f.flags.includes("STATIC"))
@@ -981,6 +1005,7 @@ export function executeMethod(
 		} else if (instruction == 0x59) {
 			// dup
 			const val = program.pop()
+			program.log(`#${programIndex} dup `)
 			program.push(val)
 			program.push(val)
 		} else if (instruction == 0xb5) {
@@ -1017,41 +1042,40 @@ export function executeMethod(
 			// areturn
 			const ref = program.pop()
 			return ref
-		} else if(instruction  == 0x9){
+		} else if (instruction == 0x9) {
 			// lconst_0
 			program.push(0n)
-		} else if(instruction == 0xa){
+		} else if (instruction == 0xa) {
 			// lconst_1
 			program.push(1n)
-		}else if(instruction == 0x41){
+		} else if (instruction == 0x41) {
 			// lstore_2
-			// Both <n> and <n>+1 must be indices into the local variable array of the current frame (§2.6). 
-			// The value on the top of the operand stack must be of type long. 
-			// It is popped from the operand stack, 
-			// and the local variables at <n> and <n>+1 are set to value. 
+			// Both <n> and <n>+1 must be indices into the local variable array of the current frame (§2.6).
+			// The value on the top of the operand stack must be of type long.
+			// It is popped from the operand stack,
+			// and the local variables at <n> and <n>+1 are set to value.
 			const value = program.pop()
 			program.variables[2] = value
 			program.variables[3] = value
-
-		} else if(instruction == 0x20){
+		} else if (instruction == 0x20) {
 			// lload_2
 			program.push(program.variables[2])
-		} else if(instruction == 0x94){
+		} else if (instruction == 0x94) {
 			// lcmp
 			const value2 = program.pop()
 			const value1 = program.pop()
-			if(value1 > value2){
+			if (value1 > value2) {
 				program.push(1)
-			}else if(value1 < value2){
+			} else if (value1 < value2) {
 				program.push(-1)
-			}else{
+			} else {
 				program.push(0)
 			}
-		} else if(instruction == 0xac){
+		} else if (instruction == 0xac) {
 			// ireturn
 			const val = program.pop()
-			return val;
-		}else {
+			return val
+		} else {
 			throw new NotImplemented(
 				hex(instruction) + " not implemented (#" + programIndex + ")",
 			)
@@ -1064,9 +1088,9 @@ function checkRef(
 	objectref: ObjectRef,
 	fieldref: Fieldref,
 ) {
-	const klass = objectref.className
 	const fieldName = fieldref.field
-	const fieldData = classManager.get(klass).fieldData[fieldName]
+	const fieldKlass = fieldref.klass
+	const fieldData = classManager.get(fieldKlass).fieldData[fieldName]
 	if (fieldData.name != fieldName) {
 		throw new Error("Field name validation failed")
 	}

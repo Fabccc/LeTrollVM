@@ -166,16 +166,14 @@ export default class ClassManager {
 					type: betterDescriptor(fieldDescriptor),
 				}
 			} else {
-				console.log(fieldFlags)
-				console.log({
+				klass.fieldData[fieldName] = {
 					attributes: attributeInfo,
 					descriptor: fieldDescriptor,
 					flags: fieldFlags,
 					name: fieldName,
 					type: betterDescriptor(fieldDescriptor),
-				})
-				console.log(hex(accessFlagsMask))
-				throw new NotImplemented("Only static fields implemented yet")
+				}
+				// throw new NotImplemented("Only static fields implemented yet")
 			}
 		}
 		// u2             methods_count;

@@ -9,9 +9,9 @@ export class StringConcatFactory extends StubClass {
 
 	public makeConcatWithConstants(...args) {
 		const [lookup, methodName, type, pattern] = args
-		return function(...argument){
-			let word: string  = pattern
-			for(const arg of argument){
+		return function (...argument) {
+			let word: string = pattern
+			for (const arg of argument) {
 				word = word.replace("\u0001", arg)
 			}
 			return word
