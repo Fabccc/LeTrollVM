@@ -46,7 +46,10 @@ class TestConsole extends StubClass {
 			)
 			if (klass instanceof StubClass) {
 				const stubClass = klass as StubClass
-				const result = (method as Function).call(stubClass, objectref)
+				const result = (method as Function).call(stubClass, {
+					type: objectref.className,
+					value: objectref,
+				} as Arguments)
 				this.printlnLines.push(result.toString())
 			} else {
 				const [runtimeClass, methodref] = [klass as Class, method as Method]

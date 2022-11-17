@@ -1,4 +1,5 @@
-import { ObjectRef } from "@base/Type"
+import Class from "@base/Class"
+import { Arguments, Method, ObjectRef } from "@base/Type"
 import { stdout } from "bun"
 import NotImplemented from "../utils/errors/NotImplemented"
 import { stringify } from "../utils/Print"
@@ -12,41 +13,47 @@ class ConsolePrintStream extends StubClass {
 	// What I want in the future
 	// BunJS doesn't implement decorator YET :YEPP:
 	//@jvm("(Ljava/lang/String;)V")
-	public println(methodDescriptor: string, ...args) {
+	public println(methodDescriptorArg: Arguments, ...args: Arguments[]) {
 		// ugly bullshit
+		const methodDescriptor = methodDescriptorArg.value
+		const firstArg = args[0].value
 		if (methodDescriptor == "(Ljava/lang/String;)V") {
-			console.log(...args)
+			console.log(firstArg)
 		} else if (methodDescriptor == "(I)V") {
-			console.log(args[0].toString())
+			console.log(firstArg.toString())
 		} else if (methodDescriptor == "(C)V") {
-			const char = args[0]
+			const char = firstArg
 			console.log(String.fromCharCode(char))
 		} else if (methodDescriptor == "(Z)V") {
 			const boolean = args[0]
 			console.log(boolean ? "true" : "false")
 		} else if (methodDescriptor == "(F)V") {
-			console.log(args[0].toString())
+			console.log(firstArg.toString())
 		} else if (methodDescriptor == "(J)V") {
-			console.log(args[0].toString())
+			console.log(firstArg.toString())
 		} else if (methodDescriptor == "(D)V") {
-			console.log(args[0].toString())
+			console.log(firstArg.toString())
 		} else if (methodDescriptor == "(Ljava/lang/Object;)V") {
-			const [objectarg] = args
-			const objectref = objectarg as ObjectRef
+			const objectref = firstArg as ObjectRef
 			const [klass, method] = this.classLoader.getSuperMethod(
 				objectref.className,
 				"toString",
 			)
 			if (klass instanceof StubClass) {
 				const stubClass = klass as StubClass
-				const result = (method as Function).call(stubClass, objectref)
+				const result = (method as Function).call(stubClass, {
+					type: objectref.className,
+					value: objectref,
+				} as Arguments)
 				console.log(result.toString())
 			} else {
-				throw new NotImplemented(
-					"Console test log with descriptor " +
-						methodDescriptor +
-						" is not implemented",
+				const [runtimeClass, methodref] = [klass as Class, method as Method]
+				const value = runtimeClass.executeMethod(
+					methodref.methodName,
+					this.classLoader,
+					...args,
 				)
+				console.log(value)
 			}
 		} else {
 			throw new NotImplemented(

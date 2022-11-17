@@ -1,5 +1,7 @@
 import { Enum } from "@stub/Enum"
 import { Stringz } from "@stub/String"
+import { replacePackage, STUB_PACKAGE } from "@stub/StubPackage"
+import ArrayList from "@stub/util/ArrayList"
 import ConsolePrintStream from "../stubs/ConsolePrintStream"
 import { StringConcatFactory } from "../stubs/StringConcatFactory"
 import { StubClass } from "../stubs/StubClass"
@@ -10,12 +12,22 @@ import Class from "./Class"
 import ClassManager from "./ClassLoader"
 import NotImplemented from "./errors/NotImplemented"
 
+export interface JavaClasses {
+	stubClasses: StubClass[]
+	name: string
+}
+
 export class StubClasses {
 	private static specialMapping = {
 		toString: "__toString__",
 	}
 
 	private stubClasses: { [key: string]: StubClass } = {}
+
+	public static from(...javaClasses: JavaClasses[]): StubClasses {
+		const stubClasses = javaClasses.flatMap((j) => j.stubClasses)
+		return new StubClasses(...stubClasses)
+	}
 
 	constructor(...stubClasses: StubClass[]) {
 		for (const klass of stubClasses) {
@@ -72,7 +84,7 @@ export class StubClasses {
 			return klass[javaMethod]
 		}
 		throw new NotImplemented(
-			`Method ${javaMethod} of klass ${javaClassName} is not implemented`,
+			`Method ${javaMethod} of stub class ${javaClassName} is not implemented`,
 		)
 	}
 
@@ -126,19 +138,18 @@ export class StubClasses {
 }
 
 export function createNewTestClasses() {
-	return new StubClasses(
-		new TestSystem(),
-		new TestConsole(),
-		new StringConcatFactory(),
-		new Stringz(),
-		new Enum(),
+	return StubClasses.from(
+		...replacePackage(STUB_PACKAGE, "base", {
+			name: "base",
+			stubClasses: [
+				new TestSystem(),
+				new TestConsole(),
+				new StringConcatFactory(),
+				new Stringz(),
+				new Enum()
+			],
+		}),
 	)
 }
 
-export const defaultStubClasses = new StubClasses(
-	new System(),
-	new ConsolePrintStream(),
-	new StringConcatFactory(),
-	new Stringz(),
-	new Enum(),
-)
+export const defaultStubClasses = StubClasses.from(...STUB_PACKAGE)

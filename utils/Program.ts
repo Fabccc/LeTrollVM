@@ -1,7 +1,7 @@
 import { CodeAttribute } from "./Type"
 
 export default class Program {
-	public static debug: boolean = false
+	public static debug: boolean = true
 
 	private instruction: Uint8Array
 	public programCounter: number = 0

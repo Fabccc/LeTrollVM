@@ -42,17 +42,27 @@ export interface InvokeDynamic {
 	dynamicParametersCount: number
 }
 
+export function isObjectRef(val: any): val is ObjectRef {
+	return val != undefined && val.type === "ObjectRef"
+}
+
 export interface ObjectRef {
+	type: "ObjectRef"
 	className: string
 	fields: { [key: string]: any }
 }
 
 export class StubObjectRef implements ObjectRef {
+	type: "ObjectRef"
 	className: string
 	fields: { [key: string]: any }
 	stubClass: StubClass
 
-	constructor(className: string, fields: { [key: string]: any }, stubClass: StubClass) {
+	constructor(
+		className: string,
+		fields: { [key: string]: any },
+		stubClass: StubClass,
+	) {
 		this.className = className
 		this.fields = fields
 		this.stubClass = stubClass
@@ -60,6 +70,7 @@ export class StubObjectRef implements ObjectRef {
 }
 
 export class ArrayRef implements ObjectRef {
+	type: "ObjectRef"
 	className: string
 	data: any[]
 	fields: { [key: string]: any }
@@ -73,6 +84,7 @@ export class ArrayRef implements ObjectRef {
 }
 
 export interface ObjectEnumRef extends ObjectRef {
+	type: "ObjectRef"
 	name: string
 	ordinal: number
 }

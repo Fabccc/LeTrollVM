@@ -27,6 +27,7 @@ import {
 	Attribute,
 	CodeAttribute,
 	Fieldref,
+	isObjectRef,
 	Method,
 	MethodData,
 	ObjectEnumRef,
@@ -81,7 +82,7 @@ export function executeMethod(
 			program.variables[i] = value
 		} else if (type == "objectref") {
 			program.variables[i] = value
-		} else if (type == "unknown") {
+		} else if (type == "java/lang/Object") {
 			// LeTroll
 			program.variables[i] = value
 		} else {
@@ -174,7 +175,10 @@ export function executeMethod(
 			if (program.stackSize >= descriptor.argCount - 1) {
 				const argumentList: Arguments[] = []
 				for (let i = 0; i < descriptor.argCount; i++) {
-					argumentList.push({ type: "unknown", value: program.pop() })
+					argumentList.push({
+						type: descriptor.argType[i].type,
+						value: program.pop(),
+					})
 				}
 				const objectref = program.pop() as ObjectRef
 				if (objectref == null) {
@@ -980,28 +984,42 @@ export function executeMethod(
 			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
 			const className = readUtf8(constantPool, constantPoolIndex)
 			program.log(`#${programIndex} new ${className}`)
-			const instanceFields = Object.values(
-				classManager.get(className).fieldData,
-			).filter((f) => !f.flags.includes("STATIC"))
-			const fieldsValues: { [key: string]: any } = {}
-			for (const field of instanceFields) {
-				if (field.type == "java/lang/String") {
-					fieldsValues[field.name] = null
-				} else if (field.type == "int") {
-					fieldsValues[field.name] = 0
-				} else if (field.type == "double") {
-					fieldsValues[field.name] = 0.0
-				} else {
-					throw new NotImplemented(
-						`Field initializion not implemented for field of type ${field.type}`,
-					)
+			// search on local and stubClasses
+			if (stubs.exist(className)) {
+				const stubClass = stubs.getStubClass(className)
+				const mh = stubs.getMethodHandle(className, "__new__")
+				const result = mh.call(stubClass)
+				if(isObjectRef(result)){
+					program.push(result)
+				}else{
+					throw new Error(`Result of stubClass call ${className}#__new__ is not ObjectRef`)
 				}
+				
+			} else {
+				const instanceFields = Object.values(
+					classManager.get(className).fieldData,
+				).filter((f) => !f.flags.includes("STATIC"))
+				const fieldsValues: { [key: string]: any } = {}
+				for (const field of instanceFields) {
+					if (field.type == "java/lang/String") {
+						fieldsValues[field.name] = null
+					} else if (field.type == "int") {
+						fieldsValues[field.name] = 0
+					} else if (field.type == "double") {
+						fieldsValues[field.name] = 0.0
+					} else {
+						throw new NotImplemented(
+							`Field initializion not implemented for field of type ${field.type}`,
+						)
+					}
+				}
+				const objectref: ObjectRef = {
+					className: className,
+					fields: fieldsValues,
+					type: "ObjectRef"
+				}
+				program.push(objectref)
 			}
-			const objectref: ObjectRef = {
-				className: className,
-				fields: fieldsValues,
-			}
-			program.push(objectref)
 		} else if (instruction == 0x59) {
 			// dup
 			const val = program.pop()

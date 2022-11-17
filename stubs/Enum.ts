@@ -35,11 +35,18 @@ export class Enum extends StubClass {
 
 	ordinal(...arg: Arguments[]): number {
 		const [instance] = arg
-		return (instance as unknown as ObjectEnumRef).ordinal
+		return (instance.value as unknown as ObjectEnumRef).ordinal
 	}
 
-  name(...arg: Arguments[]): string {
+	name(...arg: Arguments[]): string {
 		const [instance] = arg
-		return (instance as unknown as ObjectEnumRef).name
-  }
+		if (instance == undefined || instance.value == undefined) {
+			console.log(instance)
+			console.log(arg)
+			console.log(instance.value)
+			console.log(instance.value.name)
+			throw new Error("va te faire")
+		}
+		return (instance.value as unknown as ObjectEnumRef).name
+	}
 }
