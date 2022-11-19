@@ -1,7 +1,7 @@
 import { CodeAttribute } from "./Type"
 
 export default class Program {
-	public static debug: boolean = true
+	public static debug: boolean = false
 
 	private instruction: Uint8Array
 	public programCounter: number = 0
@@ -124,7 +124,7 @@ export default class Program {
 
 	public push(variable: any) {
 		if (this.stack.length >= this.maxStackSize) {
-			console.log(this.stack)
+			// console.log(this.stack)
 			throw new Error(`Stack overflow (maxStackSize=${this.maxStackSize})`)
 		}
 		if (Program.debug) {

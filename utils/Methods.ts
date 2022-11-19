@@ -7,6 +7,7 @@ import {
 	readFieldrefInfo,
 	readFloat,
 	readInteger,
+	readInterfaceMethodrefInfo,
 	readInvokeDynamic,
 	readMethodrefInfo,
 	readString,
@@ -95,6 +96,7 @@ export function executeMethod(
 	while (program.hasInstruction()) {
 		const instruction = program.readInstruction()
 		const programIndex = program.programCounter - 1
+		// program.log(`#${programIndex} stackSize=${program.stackSize}`)
 		if (instruction == 0xb1) {
 			// return :)
 			program.log(`#${programIndex} return `)
@@ -659,6 +661,164 @@ export function executeMethod(
 					program.push(value)
 				}
 			}
+		} else if (instruction == 0xb8) {
+			// invokestatic
+			// indexbyte1
+			const indexbyte1 = program.readInstruction() // ref to a value on the constant pool
+			// indexbyte2
+			const indexbyte2 = program.readInstruction() // ref to a value on the constant pool
+			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
+			const methodRef = readMethodrefInfo(constantPool, constantPoolIndex - 1)
+			const methodDesc = descriptorInfo(methodRef.methodDescriptor)
+
+			if (program.stackSize < methodDesc.argCount) {
+				throw new NotImplemented(
+					`Invalid stack size (stacksize=${program.stackSize}, methodArgCount=${methodDesc.argCount})`,
+				)
+			}
+			program.log(
+				`#${programIndex} invokedyanmic ${methodRef.methodName}#${methodDesc.asString}`,
+			)
+			if (stubs.exist(methodRef.klass)) {
+				const stubClass = stubs.getStubClass(methodRef.klass)
+				const methodHandle = stubs.getMethodHandle(
+					methodRef.klass,
+					methodRef.methodName,
+				)
+				let args: Arguments[] = []
+				for (let i = 0; i < methodDesc.argCount; i++) {
+					const { type } = methodDesc.argType[i]
+					args.push({
+						type: type,
+						value: program.pop(),
+					})
+				}
+				args.push({
+					type: "descriptor",
+					value: methodRef.methodDescriptor,
+				})
+				const result = methodHandle.call(stubClass, ...args.reverse())
+				if (result != undefined) {
+					program.push(result)
+				}
+			} else {
+				const classRef = classManager.get(methodRef.klass)
+
+				let args: Arguments[] = []
+				for (let i = 0; i < methodDesc.argCount; i++) {
+					const { type } = methodDesc.argType[i]
+					args.push({
+						type: type,
+						value: program.pop(),
+					})
+				}
+				const result = classRef.executeMethod(
+					methodRef.methodName,
+					classManager,
+					...args.reverse(),
+				)
+				if (result != undefined) {
+					program.push(result)
+				}
+			}
+		} else if (instruction == 0xb7) {
+			// invokespecial
+			//indexbyte1
+			const indexbyte1 = program.readInstruction()
+			//indexbyte2
+			const indexbyte2 = program.readInstruction()
+			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
+			const ref = readMethodrefInfo(constantPool, constantPoolIndex - 1)
+			program.log(`#${programIndex} invokespecial ${stringify(ref, 0)}`)
+			if (ref.klass == "java/lang/Object" && ref.methodName == "<init>") {
+				program.pop()
+			} else if (classManager.stubs.exist(ref.klass)) {
+				// Class has a stub class inside
+				let lookupName = ref.methodName
+				if (lookupName == "<init>") {
+					lookupName = "__init__"
+				} else if (lookupName == "<clinit>") {
+					lookupName = "__clinit__"
+				}
+				const lookupClass = classManager.stubs.getStubClass(ref.klass)
+				const methodHandle = classManager.stubs.getMethodHandle(
+					ref.klass,
+					lookupName,
+				)
+				const methodData = descriptorInfo(ref.methodDescriptor)
+				const argumentList = popArguments(program, methodData)
+				argumentList.unshift({ type: "objectref", value: program.pop() })
+				argumentList.unshift({ type: "class", value: klass })
+				methodHandle.call(lookupClass, ...argumentList)
+			} else {
+				const klass = classManager.get(ref.klass)
+				const method = klass.getMethod(ref.methodName)
+				const methodData = descriptorInfo(method.methodDescriptor)
+				const argumentList = popArguments(program, methodData)
+
+				// let objectref: ObjectRef = {
+				// 	className: ref.klass,
+				// 	fields: {},
+				// }
+				const objectref = program.pop()
+				argumentList.unshift({ type: "objectref", value: objectref })
+				klass.executeMethod(ref.methodName, classManager, ...argumentList)
+			}
+		} else if (instruction == 0xb9) {
+			// invokeinterface
+			// invokedynamic
+			// indexbyte1
+			const indexbyte1 = program.readInstruction() // ref to a value on the constant pool
+			// indexbyte2
+			const indexbyte2 = program.readInstruction() // ref to a value on the constant pool
+			// count
+			const count = program.readInstruction()
+			if (count == 0) {
+				throw new Error("invokeinterface  count is 0")
+			}
+			// 0
+			program.padZero()
+			const index = (indexbyte1 << 8) | indexbyte2
+			const invokeInterface = readInterfaceMethodrefInfo(
+				constantPool,
+				index - 1,
+			)
+			// fast lookup
+
+			const interfaceClass = invokeInterface.klass
+			const { methodDescriptor, methodName } = invokeInterface
+
+			program.log(
+				`#${programIndex} invokeinterface ${methodName}#${methodDescriptor}`,
+			)
+
+			if (stubs.exist(interfaceClass)) {
+				const stubClass = stubs.getStubClass(interfaceClass)
+				const method = stubs.getMethodHandle(interfaceClass, methodName)
+				const methodDescriptorData = descriptorInfo(methodDescriptor)
+				const dynamicArgs: Arguments[] = []
+				for (let i = 0; i < methodDescriptorData.argCount; i++)
+					dynamicArgs.push({
+						type: methodDescriptorData.argType[i].type,
+						value: program.pop(),
+					})
+				dynamicArgs.push({
+					type: "objectref",
+					value: program.pop(),
+				}) //objectref
+				dynamicArgs.push({
+					type: "descriptor",
+					value: methodDescriptor,
+				})
+				const value = method.call(stubClass, ...dynamicArgs.reverse())
+				if (value != undefined) {
+					program.push(value)
+				}
+			} else {
+				throw new NotImplemented(
+					"invokeinterface not implemented for runtime classes",
+				)
+			}
 		} else if (instruction == 0x3a) {
 			// astore
 			const index = program.readInstruction()
@@ -679,41 +839,6 @@ export function executeMethod(
 		} else if (instruction == 0x1) {
 			// aconst_null
 			program.push(null)
-		} else if (instruction == 0xb8) {
-			// invokestatic
-			// indexbyte1
-			const indexbyte1 = program.readInstruction() // ref to a value on the constant pool
-			// indexbyte2
-			const indexbyte2 = program.readInstruction() // ref to a value on the constant pool
-			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
-			const methodRef = readMethodrefInfo(constantPool, constantPoolIndex - 1)
-			const methodDesc = descriptorInfo(methodRef.methodDescriptor)
-			const classRef = classManager.get(methodRef.klass)
-			if (program.stackSize >= methodDesc.argCount) {
-				program.log(
-					`#${programIndex} invokedyanmic ${methodRef.methodName}#${methodDesc.asString}`,
-				)
-				let args: Arguments[] = []
-				for (let i = 0; i < methodDesc.argCount; i++) {
-					const { type } = methodDesc.argType[i]
-					args.push({
-						type: type,
-						value: program.pop(),
-					})
-				}
-				const result = classRef.executeMethod(
-					methodRef.methodName,
-					classManager,
-					...args.reverse(),
-				)
-				if (result != undefined) {
-					program.push(result)
-				}
-			} else {
-				throw new NotImplemented(
-					`Invalid stack size (stacksize=${program.stackSize}, methodArgCount=${methodDesc.argCount})`,
-				)
-			}
 		} else if (instruction == 0xac) {
 			// ireturn
 			program.log(`#${programIndex} ireturn `)
@@ -821,49 +946,6 @@ export function executeMethod(
 				throw new NotImplemented(
 					hex(instruction) + " not implemented for foreign static field klass",
 				)
-			}
-		} else if (instruction == 0xb7) {
-			// invokespecial
-			//indexbyte1
-			const indexbyte1 = program.readInstruction()
-			//indexbyte2
-			const indexbyte2 = program.readInstruction()
-			const constantPoolIndex = (indexbyte1 << 8) | indexbyte2
-			const ref = readMethodrefInfo(constantPool, constantPoolIndex - 1)
-			program.log(`#${programIndex} invokespecial ${stringify(ref, 0)}`)
-			if (ref.klass == "java/lang/Object" && ref.methodName == "<init>") {
-				program.pop()
-			} else if (classManager.stubs.exist(ref.klass)) {
-				// Class has a stub class inside
-				let lookupName = ref.methodName
-				if (lookupName == "<init>") {
-					lookupName = "__init__"
-				} else if (lookupName == "<clinit>") {
-					lookupName = "__clinit__"
-				}
-				const lookupClass = classManager.stubs.getStubClass(ref.klass)
-				const methodHandle = classManager.stubs.getMethodHandle(
-					ref.klass,
-					lookupName,
-				)
-				const methodData = descriptorInfo(ref.methodDescriptor)
-				const argumentList = popArguments(program, methodData)
-				argumentList.unshift({ type: "objectref", value: program.stack[0] })
-				argumentList.unshift({ type: "class", value: klass })
-				methodHandle.call(lookupClass, ...argumentList)
-			} else {
-				const klass = classManager.get(ref.klass)
-				const method = klass.getMethod(ref.methodName)
-				const methodData = descriptorInfo(method.methodDescriptor)
-				const argumentList = popArguments(program, methodData)
-
-				// let objectref: ObjectRef = {
-				// 	className: ref.klass,
-				// 	fields: {},
-				// }
-				const objectref = program.pop()
-				argumentList.unshift({ type: "objectref", value: objectref })
-				klass.executeMethod(ref.methodName, classManager, ...argumentList)
 			}
 		} else if (instruction == 0x84) {
 			// iinc
@@ -989,12 +1071,13 @@ export function executeMethod(
 				const stubClass = stubs.getStubClass(className)
 				const mh = stubs.getMethodHandle(className, "__new__")
 				const result = mh.call(stubClass)
-				if(isObjectRef(result)){
+				if (isObjectRef(result)) {
 					program.push(result)
-				}else{
-					throw new Error(`Result of stubClass call ${className}#__new__ is not ObjectRef`)
+				} else {
+					throw new Error(
+						`Result of stubClass call ${className}#__new__ is not ObjectRef`,
+					)
 				}
-				
 			} else {
 				const instanceFields = Object.values(
 					classManager.get(className).fieldData,
@@ -1016,7 +1099,7 @@ export function executeMethod(
 				const objectref: ObjectRef = {
 					className: className,
 					fields: fieldsValues,
-					type: "ObjectRef"
+					type: "ObjectRef",
 				}
 				program.push(objectref)
 			}
@@ -1089,6 +1172,9 @@ export function executeMethod(
 			} else {
 				program.push(0)
 			}
+		} else if(instruction == 0x57){
+			// pop
+			program.pop()
 		} else if (instruction == 0xac) {
 			// ireturn
 			const val = program.pop()

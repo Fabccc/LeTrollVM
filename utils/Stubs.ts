@@ -1,11 +1,8 @@
 import { Enum } from "@stub/Enum"
 import { Stringz } from "@stub/String"
 import { replacePackage, STUB_PACKAGE } from "@stub/StubPackage"
-import ArrayList from "@stub/util/ArrayList"
-import ConsolePrintStream from "../stubs/ConsolePrintStream"
 import { StringConcatFactory } from "../stubs/StringConcatFactory"
 import { StubClass } from "../stubs/StubClass"
-import System from "../stubs/System"
 import TestConsole from "../stubs/tests/TestConsole"
 import TestSystem from "../stubs/tests/TestSystem"
 import Class from "./Class"
@@ -20,6 +17,7 @@ export interface JavaClasses {
 export class StubClasses {
 	private static specialMapping = {
 		toString: "__toString__",
+		valueOf: "__valueOf__"
 	}
 
 	private stubClasses: { [key: string]: StubClass } = {}
@@ -63,7 +61,11 @@ export class StubClasses {
 
 	exist(klassName: string): boolean {
 		const javaClassName = klassName.replaceAll(".", "/")
-		return this.stubClasses[javaClassName] !== undefined
+		if (this.stubClasses[javaClassName] !== undefined) return true
+		for (const stubClass of Object.values(this.stubClasses)) {
+			if (stubClass.superClassName == javaClassName) return true
+		}
+		return false
 	}
 
 	getStubClass(klassName: string): StubClass {
@@ -71,9 +73,11 @@ export class StubClasses {
 		const klass = this.stubClasses[javaClassName]
 		if (klass !== undefined) {
 			return klass
-		} else {
-			throw new NotImplemented(`Stub for ${klassName} not implemented`)
 		}
+		for (const stubClass of Object.values(this.stubClasses)) {
+			if (stubClass.superClassName == javaClassName) return stubClass
+		}
+		throw new NotImplemented(`Stub for ${klassName} not implemented`)
 	}
 
 	getMethodHandle(klassName: string, javaMethod: string): Function {
@@ -111,7 +115,10 @@ export class StubClasses {
 				if (lookupClass == undefined || lookupClass == "java/lang/Object") {
 					break
 				}
-				klass = classManager.get(lookupClass)
+				const temp = classManager.get(lookupClass)
+				if(temp instanceof Class){
+					klass = temp
+				}
 			}
 		}
 		throw new Error(
@@ -146,7 +153,7 @@ export function createNewTestClasses() {
 				new TestConsole(),
 				new StringConcatFactory(),
 				new Stringz(),
-				new Enum()
+				new Enum(),
 			],
 		}),
 	)

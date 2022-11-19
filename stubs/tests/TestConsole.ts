@@ -40,28 +40,43 @@ class TestConsole extends StubClass {
 			this.printlnLines.push((firstArg as number).toString())
 		} else if (methodDescriptor == "(Ljava/lang/Object;)V") {
 			const objectref = firstArg as ObjectRef
-			const [klass, method] = this.classLoader.getSuperMethod(
-				objectref.className,
-				"toString",
-			)
-			if (klass instanceof StubClass) {
-				const stubClass = klass as StubClass
-				const result = (method as Function).call(stubClass, {
+			if (this.classLoader.stubs.exist(objectref.className)) {
+				const stubClass = this.classLoader.stubs.getStubClass(
+					objectref.className,
+				)
+				const toStringMethodHandle = this.classLoader.stubs.getMethodHandle(
+					objectref.className,
+					"toString",
+				)
+				const result = toStringMethodHandle.call(stubClass, {
 					type: objectref.className,
 					value: objectref,
 				} as Arguments)
 				this.printlnLines.push(result.toString())
 			} else {
-				const [runtimeClass, methodref] = [klass as Class, method as Method]
-				if (Program.debug) {
-					console.log("invoke toString() of " + runtimeClass.name)
-				}
-				const value = runtimeClass.executeMethod(
-					methodref.methodName,
-					this.classLoader,
-					...args,
+				const [klass, method] = this.classLoader.getSuperMethod(
+					objectref.className,
+					"toString",
 				)
-				this.printlnLines.push(value)
+				if (klass instanceof StubClass) {
+					const stubClass = klass as StubClass
+					const result = (method as Function).call(stubClass, {
+						type: objectref.className,
+						value: objectref,
+					} as Arguments)
+					this.printlnLines.push(result.toString())
+				} else {
+					const [runtimeClass, methodref] = [klass as Class, method as Method]
+					if (Program.debug) {
+						console.log("invoke toString() of " + runtimeClass.name)
+					}
+					const value = runtimeClass.executeMethod(
+						methodref.methodName,
+						this.classLoader,
+						...args,
+					)
+					this.printlnLines.push(value)
+				}
 			}
 		} else {
 			throw new NotImplemented(

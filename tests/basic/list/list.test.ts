@@ -5,7 +5,7 @@ import { createNewTestClasses } from "@base/Stubs"
 import TestSystem from "@stub/tests/TestSystem"
 import { expect, test } from "bun:test"
 
-test("enum lookup and methods", () => {
+test("list manipulation", () => {
 	const className = "tests/basic/list/ListTest"
 	const stubClasses = createNewTestClasses()
 

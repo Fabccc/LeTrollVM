@@ -60,6 +60,23 @@ function printClassInfo(constantPool: ConstantPool) {
 	}
 }
 
+export function readInterfaceMethodrefInfo(
+	constantPool: ConstantPool,
+	indexInfo: number,
+): Methodref {
+	const nameInfo = constantPool.at(indexInfo)
+	const klass = readClassInfo(constantPool, nameInfo.classIndex - 1)
+	const nameAndType = readNameAndTypeInfo(
+		constantPool,
+		nameInfo.nameAndTypeIndex - 1,
+	)
+	return {
+		klass: klass,
+		methodName: nameAndType.name,
+		methodDescriptor: nameAndType.desc,
+	}
+}
+
 function readMethodrefInfo(
 	constantPool: ConstantPool,
 	indexInfo: number,

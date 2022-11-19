@@ -75,7 +75,13 @@ export default class ClassManager {
 	private existsMethodHandle(className: string, methodName: string): boolean {
 		if (!this.exist(className)) return false
 		let klass = this.get(className)
-		return klass.existsMethod(methodName)
+		if (klass instanceof Class) {
+			return klass.existsMethod(methodName)
+		}
+		// if (klass instanceof StubClass) {
+		// 	return this.stubs.existsMethodHandle(klass.javaClassName, methodName)
+		// }
+		throw new Error("Expect type Class|StubClass but got " + klass)
 	}
 
 	private load(className: string): Class {
@@ -228,6 +234,9 @@ export default class ClassManager {
 	}
 
 	public get(className: string): Class {
+		// if (this.stubs.exist(className)) {
+		// 	return this.stubs.getStubClass(className)
+		// }
 		if (!(className in this.classes)) {
 			this.load(className)
 		}

@@ -4,6 +4,7 @@ import { Stringz } from "@stub/String"
 import ConsolePrintStream from "../stubs/ConsolePrintStream"
 import { StringConcatFactory } from "../stubs/StringConcatFactory"
 import System from "../stubs/System"
+import Integer from "./lang/Integer"
 import ArrayList from "./util/ArrayList"
 
 export const STUB_PACKAGE: JavaClasses[] = [
@@ -12,10 +13,16 @@ export const STUB_PACKAGE: JavaClasses[] = [
 		stubClasses: [
 			new System(),
 			new ConsolePrintStream(),
+		],
+	},
+	{
+		name: "lang",
+		stubClasses: [
 			new StringConcatFactory(),
 			new Stringz(),
 			new Enum(),
-		],
+			new Integer()
+		]
 	},
 	{
 		name: "jdk",
