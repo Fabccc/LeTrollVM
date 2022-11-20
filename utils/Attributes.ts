@@ -1,3 +1,4 @@
+import { listMethodAccesors } from "./Accessors"
 import BufferedReader from "./BufferedReader"
 import {
 	ConstantPool,
@@ -144,6 +145,9 @@ export function readAttributeInfo(
 				if (frameType >= 0 && frameType <= 63) {
 					const offsetDelta = frameType
 					entries.push({ frameType, offsetDelta })
+				} else if (frameType >= 64 && frameType <= 127) {
+					const stack = readVerifications(1, constantPool, reader)[0]
+					entries.push({ frameType, stack })
 				} else if (frameType == 255) {
 					// 	full_frame {
 					// 		u2 offset_delta;
@@ -184,7 +188,7 @@ export function readAttributeInfo(
 						offsetDelta,
 						verifs,
 					})
-				} else if (frameType == 248 || frameType == 250) {
+				} else if (frameType == 248 || frameType == 249 || frameType == 250) {
 					const offsetDelta = reader.readU2()
 					entries.push({
 						frameType,
@@ -221,8 +225,54 @@ export function readAttributeInfo(
 			const nestHostInfoIndex = reader.readU2()
 			const nestHostInfo = readClassInfo(constantPool, nestHostInfoIndex - 1)
 			attributes.push({ name, nestHostInfoIndex, nestHostInfo })
+		} else if (name == "MethodParameters") {
+			// u1 parameters_count;
+			const paramCount = reader.readU1()
+			const params = []
+			for (let i = 0; i < paramCount; i++) {
+				// {   u2 name_index;
+				const nameIndex = reader.readU2()
+				if (nameIndex != 0) {
+					const name = readUtf8(constantPool, nameIndex - 1)
+					//     u2 access_flags;
+					const access = reader.readU2()
+					const flags = listMethodAccesors(access)
+					params.push({ name, flags, access })
+				} else {
+					const access = reader.readU2()
+					const flags = listMethodAccesors(access)
+					params.push({ name: 0, flags, access })
+				}
+			}
+			// } parameters[parameters_count];
+			attributes.push({ name, params })
+		} else if (name == "Record") {
+			// u2                    components_count;
+			const componentsCount = reader.readU2()
+			const components = []
+			// record_component_info components[components_count];
+			for (let i = 0; i < componentsCount; i++) {
+				// u2             name_index;
+				const nameIndex = reader.readU2()
+				// u2             descriptor_index;
+				const descriptorIndex = reader.readU2()
+				// u2             attributes_count;
+				const attributeCount = reader.readU2()
+				// attribute_info attributes[attributes_count];
+				const attributes = readAttributeInfo(
+					reader,
+					attributeCount,
+					constantPool,
+				)
+
+				const name = readUtf8(constantPool, nameIndex - 1)
+				const descriptor = readUtf8(constantPool, descriptorIndex - 1)
+
+				components.push({ name, descriptor, attributes })
+			}
+			attributes.push({ name, components })
 		} else {
-			throw new NotImplemented("Attribute: reading undefined for " + name)
+			throw new NotImplemented("Attribute: reading not implemented for " + name)
 		}
 	}
 	return attributes
@@ -265,7 +315,9 @@ export function readVerifications(
 			// }
 			localsVerifications.push("top")
 		} else if (tag == 4) {
-			localsVerifications.push("int")
+			localsVerifications.push("long")
+		} else if (tag == 3) {
+			localsVerifications.push("double")
 		} else {
 			throw new NotImplemented(
 				`Attribute: vertification type locals ${tag} is not implemented`,

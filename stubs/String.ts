@@ -8,6 +8,10 @@ export class Stringz extends StubClass {
 		super("java.lang.String")
 	}
 
+	public __init_value__() {
+		return null
+	}
+
 	public hashCode(arg: Arguments): number {
 		ensureArgument(arg, "string")
 		const s = arg.value

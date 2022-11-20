@@ -101,6 +101,7 @@ export default class ClassManager {
 		if (magik != 0xcafebabe) {
 			throw new NotFound(`Class ${className} has wrong file header`)
 		}
+		console.log("Reading ConstantPool of "+className)
 		// u2             minor_version;
 		// u2             major_version;
 		const minor = reader.readU2()
@@ -130,7 +131,15 @@ export default class ClassManager {
 		const interfaces = []
 		// u2             interfaces[interfaces_count];
 		for (let i = 0; i < interfacesCount; i++) {
-			throw new NotImplemented("Interface not implemented yet")
+			const classInfoIndex = reader.readU2()
+			// Each value in the interfaces array must be a valid index into
+			// the constant_pool table. The constant_pool entry at each value 
+			// of interfaces[i], where 0 ≤ i < interfaces_count, must be a 
+			// CONSTANT_Class_info structure representing an interface that is a direct 
+			// superinterface of this class or interface type, in the left-to-right order
+			// given in the source for the type. 
+			const classInfo = readClassInfo(constantPool, classInfoIndex - 1)
+			interfaces.push(classInfo)
 		}
 		// u2             fields_count;
 		const fieldsCount = reader.readU2()
@@ -196,7 +205,9 @@ export default class ClassManager {
 			// }
 			const accessFlags = reader.readU2()
 			const accessorsFlags = listMethodAccesors(accessFlags)
-			const methodName = readNameIndex(constantPool, reader.readU2() - 1)
+			// console.log(accessorsFlags)
+			const methodNameIndex = reader.readU2()
+			const methodName = readNameIndex(constantPool, methodNameIndex - 1)
 			const methodDescriptor = readNameIndex(constantPool, reader.readU2() - 1)
 			const methodSignature = betterMethodDescriptor(methodDescriptor)
 			const attributeCount = reader.readU2()
@@ -217,6 +228,7 @@ export default class ClassManager {
 		const superclass = readClassInfo(constantPool, thisSuperClass - 1)
 
 		this.classes[className] = klass
+		klass.interfaces = interfaces
 		klass.superClass = superclass
 		klass.enum = klass.superClass == "java/lang/Enum"
 		klass.resolve(this)

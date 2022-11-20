@@ -6,14 +6,12 @@ import { StringConcatFactory } from "../stubs/StringConcatFactory"
 import System from "../stubs/System"
 import Integer from "./lang/Integer"
 import ArrayList from "./util/ArrayList"
+import UUID from "./util/UUID"
 
 export const STUB_PACKAGE: JavaClasses[] = [
 	{
 		name: "base",
-		stubClasses: [
-			new System(),
-			new ConsolePrintStream(),
-		],
+		stubClasses: [new System(), new ConsolePrintStream()],
 	},
 	{
 		name: "lang",
@@ -21,12 +19,12 @@ export const STUB_PACKAGE: JavaClasses[] = [
 			new StringConcatFactory(),
 			new Stringz(),
 			new Enum(),
-			new Integer()
-		]
+			new Integer(),
+		],
 	},
 	{
 		name: "jdk",
-		stubClasses: [new ArrayList()],
+		stubClasses: [new ArrayList(), new UUID()],
 	},
 ]
 

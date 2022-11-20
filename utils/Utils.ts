@@ -19,6 +19,21 @@ export function ensureArgument(arg: Arguments, type: string) {
 		)
 }
 
+export function parseLongHexa(
+	s: string,
+	beginIndex: number,
+	endIndex: number,
+): bigint {
+	const newStr = s.substring(beginIndex, endIndex)
+	return BigInt("0x" + newStr)
+}
+
+// export function parseIntExtended(s: string, beginIndex: number, endIndex: number, radix: number){
+// 	//CharSequence s, int beginIndex, int endIndex, int radix
+// 	parse
+
+// }
+
 export function ensureArgumentI(
 	args: Arguments[],
 	index: number,

@@ -20,6 +20,11 @@ export interface MethodArgument {
 	type: string
 }
 
+export interface MethodType {
+	name: string
+	descriptor: string
+}
+
 export interface Methodref {
 	klass: string
 	methodName: string

@@ -121,19 +121,19 @@ function readFloat(constantPool: ConstantPool, indexInfo: number): number {
 	return value
 }
 
-export function readUtf8(constantPool: ConstantPool, indexInfo: number): string {
+export function readUtf8(
+	constantPool: ConstantPool,
+	indexInfo: number,
+): string {
 	const { value } = constantPool.at(indexInfo)
 	return value
 }
-
 
 function readString(constantPool: ConstantPool, indexInfo: number): string {
 	const cstValue = constantPool.at(indexInfo)
 	const { value } = constantPool.at(cstValue.stringIndex - 1)
 	return value
 }
-
-
 
 export function readMethodHandleInfo(
 	klass: Class,
@@ -251,6 +251,9 @@ function readNameIndex(
 	nameIndexInfo: number,
 ): string {
 	const nameInfo = constantPool.at(nameIndexInfo)
+	if (nameInfo == undefined || nameInfo.value === undefined) {
+		throw new Error("Try to find nameIndex at index " + nameIndexInfo)
+	}
 	return nameInfo.value
 }
 
@@ -374,6 +377,15 @@ function readConstantPool(reader: BufferedReader): ConstantPool {
 				referenceIndex,
 				referenceKindName,
 			})
+		} else if (name == "MethodType") {
+			// throw new NotImplemented(
+			// 	`CONSTANTPOOL: ${name} [${tag}] read is not implemetend yet`,
+			// )
+			const descriptorIndex = reader.readU2()
+			constantPool.push({
+				name: name,
+				descriptorIndex: descriptorIndex,
+			})
 		} else {
 			throw new NotImplemented(
 				`CONSTANTPOOL: ${name} [${tag}] read is not implemetend yet`,
@@ -403,6 +415,27 @@ export class ConstantPool {
 
 	at(index: number) {
 		return this.constantPool[index - this.unusableCount(index)]
+	}
+
+	toString(): string {
+		let i = 1
+		let res = ""
+		let ctxPoolValue = this.at(i - 1)
+		while (ctxPoolValue !== undefined) {
+			res += `#${i} ${ctxPoolValue.name} \t\t\t ${
+				ctxPoolValue.value || stringify(ctxPoolValue, 0)
+			}\n`
+			let newCtxPoolValue = ctxPoolValue
+			while (ctxPoolValue === newCtxPoolValue) {
+				i++
+				newCtxPoolValue = this.at(i - 1)
+				if (newCtxPoolValue === undefined) {
+					break
+				}
+			}
+			ctxPoolValue = newCtxPoolValue
+		}
+		return res
 	}
 
 	unusableCount(index: number) {

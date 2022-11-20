@@ -75,22 +75,7 @@ export function executeMethod(
 	// init local variables
 	for (let i = 0; i < arg.length; i++) {
 		const { type, value } = arg[i]
-		if (type == "int") {
-			program.variables[i] = value
-		} else if (type == "java/lang/String") {
-			program.variables[i] = value
-		} else if (type == "double") {
-			program.variables[i] = value
-		} else if (type == "objectref") {
-			program.variables[i] = value
-		} else if (type == "java/lang/Object") {
-			// LeTroll
-			program.variables[i] = value
-		} else {
-			throw new NotImplemented(
-				`Argument ${type} transfert into local variable not implemented`,
-			)
-		}
+		program.variables[i] = value
 	}
 
 	while (program.hasInstruction()) {
@@ -1084,7 +1069,11 @@ export function executeMethod(
 				).filter((f) => !f.flags.includes("STATIC"))
 				const fieldsValues: { [key: string]: any } = {}
 				for (const field of instanceFields) {
-					if (field.type == "java/lang/String") {
+					if (stubs.exist(field.type)) {
+						const fieldStubClass = stubs.getStubClass(field.type)
+						const mh = stubs.getMethodHandle(field.type, "__init_value__")
+						fieldsValues[field.name] = mh.call(fieldStubClass)
+					} else if (field.type == "java/lang/String") {
 						fieldsValues[field.name] = null
 					} else if (field.type == "int") {
 						fieldsValues[field.name] = 0
@@ -1172,7 +1161,7 @@ export function executeMethod(
 			} else {
 				program.push(0)
 			}
-		} else if(instruction == 0x57){
+		} else if (instruction == 0x57) {
 			// pop
 			program.pop()
 		} else if (instruction == 0xac) {

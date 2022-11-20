@@ -15,6 +15,7 @@ export default class Class {
 	public fieldData: { [key: string]: Field } = {}
 	public enum: boolean
 	public superClass: string
+	public interfaces: string[]
 	public staticFields: { [key: string]: any } = {}
 
 	// fields, methods and all that stuff
