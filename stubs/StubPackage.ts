@@ -5,6 +5,7 @@ import ConsolePrintStream from "../stubs/ConsolePrintStream"
 import { StringConcatFactory } from "../stubs/StringConcatFactory"
 import System from "../stubs/System"
 import Integer from "./lang/Integer"
+import Record from "./lang/Record"
 import ArrayList from "./util/ArrayList"
 import UUID from "./util/UUID"
 
@@ -20,6 +21,7 @@ export const STUB_PACKAGE: JavaClasses[] = [
 			new Stringz(),
 			new Enum(),
 			new Integer(),
+			new Record(),
 		],
 	},
 	{

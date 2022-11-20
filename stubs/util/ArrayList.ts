@@ -14,6 +14,30 @@ export default class ArrayList extends StubClass {
 		super("java/util/ArrayList", "java/util/List")
 	}
 
+	public of(...args: Arguments[]): ObjectRef {
+		const [descriptorArg] = args
+		if (args.length == 1) {
+			throw new NotImplemented("ArrayList#of with 0 args is not implemented")
+		}
+		const arrayRef = this.__new__()
+		const array: any[] = arrayRef.fields["array"]
+		for (let i = 1; i < args.length; i++) {
+			array.push(args[i].value)
+		}
+		return arrayRef
+	}
+
+	public stream(...args: Arguments[]): ObjectRef {
+		ensureArgumentI(args, 0, "descriptor")
+		const [descriptorArg] = args
+		const descriptor = descriptorArg.value as string
+		if(descriptor == "()Ljava/util/stream/Stream;"){
+			throw new NotImplemented("ArrayList#stream is not implemented")
+		}else{
+			throw new NotImplemented("ArrayList#stream is not implemented")
+		}
+	}
+
 	public __init__(...arg: Arguments[]) {
 		const [callerArg, objectrefArg] = arg
 

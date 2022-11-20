@@ -149,8 +149,6 @@ export default class UUID extends StubClass {
 
 	public randomUUID(...args: Arguments[]): ObjectRef {
 		const uuid = crypto.randomUUID()
-		console.log(uuid)
-		console.log(args)
 		const uuidref = this.fromString(
 			{
 				type: "descriptor",
