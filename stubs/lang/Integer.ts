@@ -1,5 +1,6 @@
+import ClassManager from "@base/ClassLoader"
 import NotImplemented from "@base/errors/NotImplemented"
-import { Arguments, ObjectRef } from "@base/Type"
+import { Arguments, ObjectRef, StubObjectRef } from "@base/Type"
 import { ensureArgumentI } from "@base/Utils"
 import { StubClass } from "@stub/StubClass"
 
@@ -14,13 +15,17 @@ export default class Integer extends StubClass {
 		if (methodDescriptor == "(I)Ljava/lang/Integer;") {
 			// Integer.valueOf(int i)
 			ensureArgumentI(args, 1, "int")
-			const objectref: ObjectRef = {
-				type: "ObjectRef",
-				className: "java/lang/Integer",
-				fields: {
-					value: args[1].value,
-				},
-			}
+			// const objectref: ObjectRef = {
+			// 	type: "ObjectRef",
+			// 	className: "java/lang/Integer",
+			// 	fields: {
+			// 		value: args[1].value,
+			// 	},
+			// }
+
+			const objectref: StubObjectRef = new StubObjectRef("java/lang/Integer", {
+				value: args[1].value,
+			}, ClassManager.getInstance().stubs.getStubClass("java/lang/Integer"))
 			return objectref
 		} else {
 			throw new NotImplemented(
@@ -28,4 +33,9 @@ export default class Integer extends StubClass {
 			)
 		}
 	}
+
+	public intValue(...args: Arguments[]) {
+		console.log(args.map(a => a.type))
+        throw new NotImplemented("intValue not implemented");
+    }
 }

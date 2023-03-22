@@ -1,3 +1,4 @@
+import ClassManager from "@base/ClassLoader"
 import NotImplemented from "@base/errors/NotImplemented"
 import {
 	Arguments,
@@ -31,9 +32,9 @@ export default class ArrayList extends StubClass {
 		ensureArgumentI(args, 0, "descriptor")
 		const [descriptorArg] = args
 		const descriptor = descriptorArg.value as string
-		if(descriptor == "()Ljava/util/stream/Stream;"){
+		if (descriptor == "()Ljava/util/stream/Stream;") {
 			throw new NotImplemented("ArrayList#stream is not implemented")
-		}else{
+		} else {
 			throw new NotImplemented("ArrayList#stream is not implemented")
 		}
 	}
@@ -100,19 +101,37 @@ export default class ArrayList extends StubClass {
 
 	public add(...args: Arguments[]): boolean {
 		const methodDescriptor = args[0].value
-		console.log(methodDescriptor)
 		if (methodDescriptor == "(Ljava/lang/Object;)Z") {
 			// List#add(E): boolean
 			ensureArgumentI(args, 1, "objectref")
 			const [md, arrayRefArg, integerRefArg] = args
 			const arrayRef = arrayRefArg.value as ArrayRef
 			const integerRef = integerRefArg.value as ObjectRef
-			;(arrayRef.fields["array"] as any[]).push(integerRef)
+				; (arrayRef.fields["array"] as any[]).push(integerRef)
 			return true
 		} else {
+			console.log(methodDescriptor)
 			throw new NotImplemented(
 				"ArrayList#add not implemented with descriptor " + methodDescriptor,
 			)
+		}
+	}
+
+	public iterator(...args: Arguments[]): StubObjectRef {
+		const methodDescriptor = args[0].value
+		if (methodDescriptor == "()Ljava/util/Iterator;") {
+			ensureArgumentI(args, 1, "objectref")
+			const [md, arrayRefArg] = args
+			const arrayRef = arrayRefArg.value as ArrayRef
+
+			const objectref: StubObjectRef = new StubObjectRef("java/util/Iterator", {
+				cursor: 0,
+				array: [...arrayRef.fields["array"]],
+			}, ClassManager.getInstance().stubs.getStubClass("java/util/Iterator"))
+			return objectref
+		} else {
+			console.log(methodDescriptor)
+			throw new NotImplemented("ArrayList#iterator is not implemented with descriptor " + methodDescriptor)
 		}
 	}
 

@@ -85,6 +85,17 @@ export default class Program {
 		)
 	}
 
+	public read16Bits(): number {
+		// defaultbyte1
+		const defaultbyte1 = this.readValue()
+		// defaultbyte2
+		const defaultbyte2 = this.readValue()
+		return (
+			(defaultbyte1 << 8) |
+			defaultbyte2
+		)
+	}
+
 	public padZero() {
 		const zero = this.readInstruction()
 		if (zero != 0) {

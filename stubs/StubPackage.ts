@@ -7,6 +7,7 @@ import System from "../stubs/System"
 import Integer from "./lang/Integer"
 import Record from "./lang/Record"
 import ArrayList from "./util/ArrayList"
+import Iterator from "./util/Iterator"
 import UUID from "./util/UUID"
 
 export const STUB_PACKAGE: JavaClasses[] = [
@@ -26,7 +27,7 @@ export const STUB_PACKAGE: JavaClasses[] = [
 	},
 	{
 		name: "jdk",
-		stubClasses: [new ArrayList(), new UUID()],
+		stubClasses: [new ArrayList(), new UUID(), new Iterator()],
 	},
 ]
 

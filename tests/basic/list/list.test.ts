@@ -20,4 +20,7 @@ test("list manipulation", () => {
   expect(consoleOutput.printlnLines[1]).toBe("[5, 2, 26, 694205]")
   expect(consoleOutput.printlnLines[2]).toBe("[2, 26]")
   expect(consoleOutput.printlnLines[3]).toBe("2")
+  
+  expect(consoleOutput.printlnLines[4]).toBe("2")
+  expect(consoleOutput.printlnLines[5]).toBe("26")
 })

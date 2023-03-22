@@ -19,6 +19,10 @@ public class ListTest {
     System.out.println(list);
     System.out.println(list.size());
 
+    for(int i : list){
+      System.out.println(i);
+    }
+
   }
 
 }

@@ -19,6 +19,7 @@ import {
 	descriptorInfo,
 	type,
 } from "./Descriptors"
+import IllegalType from "./errors/IllegalType"
 import NotImplemented from "./errors/NotImplemented"
 import { stringify } from "./Print"
 import Program from "./Program"
@@ -99,8 +100,7 @@ export function executeMethod(
 			const ref = readFieldrefInfo(constantPool, constantPoolIndex - 1)
 			const fType = type(ref.fieldType)
 			program.log(
-				`#${programIndex} getstatic ${ref.klass}.${
-					ref.field
+				`#${programIndex} getstatic ${ref.klass}.${ref.field
 				} => ${betterDescriptor(ref.fieldType)}`,
 			)
 			if (classManager.exist(ref.klass)) {
@@ -177,18 +177,18 @@ export function executeMethod(
 						if (instance == undefined) {
 							throw new NotImplemented(
 								"Stub instance for " +
-									JSON.stringify(objectref, null, 1) +
-									" not found",
+								JSON.stringify(objectref, null, 1) +
+								" not found",
 							)
 						}
 						const methodHandle: Function = instance[methodRef.methodName]
 						if (methodHandle == undefined) {
 							throw new NotImplemented(
 								"Stub method " +
-									methodRef.methodName +
-									" for " +
-									JSON.stringify(instance.javaClassName, null, 1) +
-									" not found",
+								methodRef.methodName +
+								" for " +
+								JSON.stringify(instance.javaClassName, null, 1) +
+								" not found",
 							)
 						}
 						// On invoke virtual, an instance of object must be added to arg for javascript to work
@@ -252,9 +252,9 @@ export function executeMethod(
 				} else {
 					throw new NotImplemented(
 						"invokevirtual Not implemented with " +
-							argumentList +
-							" / " +
-							objectref,
+						argumentList +
+						" / " +
+						objectref,
 					)
 				}
 			} else {
@@ -1168,6 +1168,26 @@ export function executeMethod(
 			// ireturn
 			const val = program.pop()
 			return val
+		} else if (instruction == 0xc0) {
+			// checkcast
+			// indexbyte1
+			// indexbyte2
+			// =============================
+			// The objectref must be of type reference.
+			// The unsigned indexbyte1 and indexbyte2 are used to construct an index into the run - 
+			// time constant pool of the current class (§2.6), 
+			// where the value of the index is(indexbyte1 << 8) | indexbyte2.
+			// The run - time constant pool entry at the index must be a symbolic reference to a class, 
+			// array, or interface type.
+
+			// TODO check for inheritance
+			const index = program.read16Bits()
+			const className = readClassInfo(constantPool, index - 1)
+			const objectRef: ObjectRef = program.pop()
+			if(className !== objectRef.className){
+				throw new IllegalType(`ClassCastException, cannot cast ${objectRef.className} to ${className}`)
+			}
+			program.push(objectRef)
 		} else {
 			throw new NotImplemented(
 				hex(instruction) + " not implemented (#" + programIndex + ")",

@@ -22,12 +22,22 @@ import { defaultStubClasses, StubClasses } from "./Stubs"
 import { Method, MethodHandle } from "./Type"
 
 export default class ClassManager {
+
+	private static instance: ClassManager;
+
+	public static getInstance(): ClassManager {
+		return ClassManager.instance;
+	}
+
 	private classes: { [className: string]: Class } = {}
 	public stubs: StubClasses
+
+
 
 	constructor(stub?: StubClasses) {
 		this.stubs = stub || defaultStubClasses
 		this.stubs.setClassLoader(this)
+		ClassManager.instance = this
 	}
 
 	getSuperMethod(
@@ -101,7 +111,7 @@ export default class ClassManager {
 		if (magik != 0xcafebabe) {
 			throw new NotFound(`Class ${className} has wrong file header`)
 		}
-		console.log("Reading ConstantPool of "+className)
+		console.log("Reading ConstantPool of " + className)
 		// u2             minor_version;
 		// u2             major_version;
 		const minor = reader.readU2()
