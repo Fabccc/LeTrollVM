@@ -27,32 +27,25 @@ Java Virtual Machine written in Typescript and executed with BunJS.
   - [ ] Atomics
     - [ ] AtomicInteger
 
-# JSE 19 docs
+# Requirements
 
-https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html
-
-# Java Tools
-
-```shell
-javap -c -verbose Main
-```
+- JDK >= 19.0.2
+  - `javac`
+  - `javap`
 
 # Installation
 
-To install dependencies:
-
 ```bash
 bun install
+./build_class.sh
 ```
 
 Tests:
 
 ```bash
-bun wiptest
+bun test
 ```
 
 ```bash
 bun run index.ts <ClassName>
 ```
-
-This project was created using `bun init` in bun v0.1.13. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
