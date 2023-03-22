@@ -2,13 +2,12 @@
 
 Java Virtual Machine written in Typescript and executed with BunJS.
 
-## What can I do with it ? I mean you can look at it
 ### Roadmap
 
 - [x] Printing
 - [x] Arithmetic
 - [x] Polymorphism
-- [ ] JDK base classes
+- [ ] JDK base classes (auto-Boxing)
   - [ ] Number
     - [x] Integer
     - [ ] Float
@@ -49,3 +48,15 @@ bun test
 ```bash
 bun run index.ts <ClassName>
 ```
+
+# Resources
+
+## Java doc
+
+https://docs.oracle.com/en/java/javase/19/docs/api/index.html
+
+## Java specs (for bytecode interpretation)
+
+https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html
+https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-5.html
+https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-6.html
