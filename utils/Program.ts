@@ -1,3 +1,4 @@
+import { stringify } from "./Print"
 import { CodeAttribute } from "./Type"
 
 export default class Program {
@@ -40,7 +41,7 @@ export default class Program {
 		return this.instruction[this.programCounter++]
 	}
 
-	public readInstructionAt(index: number): number{
+	public readInstructionAt(index: number): number {
 		return this.instruction[index]
 	}
 
@@ -51,15 +52,15 @@ export default class Program {
 		return this.instruction[this.programCounter++]
 	}
 
-	public read32BitsAt(index: number): number{
+	public read32BitsAt(index: number): number {
 		// defaultbyte1
 		const defaultbyte1 = this.readInstructionAt(index)
 		// defaultbyte2
-		const defaultbyte2 = this.readInstructionAt(index+1)
+		const defaultbyte2 = this.readInstructionAt(index + 1)
 		// defaultbyte3
-		const defaultbyte3 = this.readInstructionAt(index+2)
+		const defaultbyte3 = this.readInstructionAt(index + 2)
 		// defaultbyte4
-		const defaultbyte4 = this.readInstructionAt(index+3)
+		const defaultbyte4 = this.readInstructionAt(index + 3)
 		return (
 			(defaultbyte1 << 24) |
 			(defaultbyte2 << 16) |
@@ -103,8 +104,8 @@ export default class Program {
 		}
 	}
 
-	public skipUntilMultiple4(){
-		while(this.programCounter%4!=0){
+	public skipUntilMultiple4() {
+		while (this.programCounter % 4 != 0) {
 			this.padZero()
 		}
 		return this.instruction[this.programCounter++]
@@ -138,9 +139,7 @@ export default class Program {
 			// console.log(this.stack)
 			throw new Error(`Stack overflow (maxStackSize=${this.maxStackSize})`)
 		}
-		if (Program.debug) {
-			// console.error(`(=>) Pushing ${variable}`)
-		}
+		// this.log(`(=>) Pushing ${stringify(variable)}`)
 		this.stack.push(variable)
 	}
 	public offset(cursor: number) {
@@ -167,9 +166,8 @@ export default class Program {
 		if (this.stack.length == 0) {
 			throw new Error("Stack empty")
 		}
-		if (Program.debug) {
-			// console.error(`(<=) Poping ${this.stack[this.stack.length - 1]}`)
-		}
+		// this.log(`(<=) Poping ${stringify(this.stack[this.stack.length - 1])}`)
+
 		return this.stack.pop()
 	}
 

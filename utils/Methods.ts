@@ -1,6 +1,8 @@
+import "reflect-metadata"
 import { StubClass } from "@stub/StubClass"
 import Class from "./Class"
 import ClassManager from "./ClassLoader"
+
 import {
 	ConstantPool,
 	readClassInfo,
@@ -195,6 +197,17 @@ export function executeMethod(
 						// properly, as like Java, require an instance of object to make this function work
 						// e.g.: it's not static :))))
 						// methodHandle.call(instance, methodRef.methodDescriptor, value)
+						// console.log(Reflect.getMetadata("flags", instance, methodRef.methodName))
+						// console.log(Reflect.getMetadataKeys(instance))
+						// Reflect.getMetadataKeys(instance)
+						// 	.forEach(k => console.log(Reflect.getMetadata(k, instance)))
+						if (instance.nonStatic.includes(methodRef.methodName)) {
+							argumentList.unshift({
+								type: "objectref",
+								value: objectref
+							})
+						}
+
 						argumentList.unshift({
 							type: "descriptor",
 							value: methodRef.methodDescriptor,
@@ -1183,8 +1196,9 @@ export function executeMethod(
 			// TODO check for inheritance
 			const index = program.read16Bits()
 			const className = readClassInfo(constantPool, index - 1)
+			program.log(`#${programIndex} checkcast ${index} ${className}`)
 			const objectRef: ObjectRef = program.pop()
-			if(className !== objectRef.className){
+			if (className !== objectRef.className) {
 				throw new IllegalType(`ClassCastException, cannot cast ${objectRef.className} to ${className}`)
 			}
 			program.push(objectRef)
